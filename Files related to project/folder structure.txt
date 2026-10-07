@@ -1,0 +1,179 @@
+aegis-commerce-backend/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                          # Lint, type-check, unit tests, integration tests, Docker build
+│       └── cd.yml                          # AWS ECS/EKS deployment via GitHub Actions & Terraform
+│
+├── docker/
+│   ├── Dockerfile                          # Multi-stage production build for the HTTP API
+│   ├── Dockerfile.worker                   # Lightweight container for Kafka background workers
+│   └── docker-compose.yml                  # Local PostgreSQL (pgvector), Kafka, Zookeeper, Redis, LocalStack (S3)
+│
+├── scripts/
+│   ├── seed-database.ts                    # Seeds initial users, roles, categories, and inventory
+│   ├── seed-embeddings.ts                  # Generates initial vector embeddings for product catalog & runbooks
+│   └── setup-kafka-topics.ts               # Programmatically creates partitions and replication topics
+│
+├── src/
+│   ├── config/                             # Strict environment validation via Zod
+│   │   ├── env.ts                          # App environment variables (PORT, NODE_ENV, JWT_SECRET)
+│   │   ├── aws.config.ts                   # S3, KMS, CloudWatch configuration
+│   │   ├── database.config.ts              # PostgreSQL / pgvector connection settings
+│   │   ├── kafka.config.ts                 # Broker connection, client IDs, consumer groups
+│   │   ├── redis.config.ts                 # Cluster / standalone Redis connection
+│   │   └── ai.config.ts                    # OpenAI/Anthropic SDK keys, model versions, temperature defaults
+│   │
+│   ├── core/                               # Cross-cutting foundational infrastructure
+│   │   ├── database/
+│   │   │   ├── index.ts                    # Database connection pool (Prisma / Kysely / pg)
+│   │   │   ├── migrations/                 # SQL migration files (tables, indexes, pgvector extension)
+│   │   │   └── seeders/                    # Base fixtures
+│   │   │
+│   │   ├── redis/
+│   │   │   ├── client.ts                   # Primary Redis client instance
+│   │   │   ├── semantic-cache.ts           # Semantic caching for prompt-response pairs
+│   │   │   └── rate-limiter.ts             # Sliding-window algorithm implementation
+│   │   │
+│   │   ├── kafka/
+│   │   │   ├── client.ts                   # KafkaJS instance setup
+│   │   │   ├── producer.ts                 # Strongly typed event publishing helper
+│   │   │   └── topics.ts                   # Enums of all event topics across domains
+│   │   │
+│   │   ├── s3/
+│   │   │   └── s3.service.ts               # Presigned URLs generation and file streaming to AWS S3
+│   │   │
+│   │   ├── errors/
+│   │   │   ├── app-error.ts                # Base custom operational error class
+│   │   │   ├── unauthorized-error.ts       # 401 & 403 HTTP custom errors
+│   │   │   └── not-found-error.ts          # 404 HTTP custom errors
+│   │   │
+│   │   └── logger/
+│   │       └── logger.ts                   # Structured JSON logger (Pino / Winston) with trace IDs
+│   │
+│   ├── middlewares/                        # Express HTTP request filters
+│   │   ├── authenticate.ts                 # JWT extraction, signature validation, and claims attachment
+│   │   ├── authorize.ts                    # RBAC / ABAC clearance checks on standard API endpoints
+│   │   ├── error-handler.ts                # Global unhandled error boundary & structured response
+│   │   ├── rate-limit.ts                   # Redis-backed endpoint protection
+│   │   ├── request-logger.ts               # Inbound/outbound HTTP telemetry logging
+│   │   └── validate.ts                     # Generic request validation middleware (body, query, params)
+│   │
+│   ├── modules/                            # Domain-Driven Core Modules
+│   │   │
+│   │   ├── auth/                           # Authentication & Identity
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── auth.service.ts             # Signup, Login, Refresh tokens, Password hashing
+│   │   │   ├── auth.routes.ts
+│   │   │   ├── auth.schema.ts              # Zod validation schemas
+│   │   │   └── auth.types.ts
+│   │   │
+│   │   ├── catalog/                        # Product, Category & Brand Management
+│   │   │   ├── catalog.controller.ts
+│   │   │   ├── catalog.service.ts          # Emits CATALOG_UPDATED Kafka events on mutations
+│   │   │   ├── catalog.routes.ts
+│   │   │   ├── catalog.schema.ts
+│   │   │   └── catalog.types.ts
+│   │   │
+│   │   ├── search/                         # Enterprise Hybrid Search & Faceting
+│   │   │   ├── search.controller.ts
+│   │   │   ├── search.service.ts           # Orchestrates cache check, hybrid retrieval, and business boosting
+│   │   │   ├── search.routes.ts
+│   │   │   ├── search.schema.ts
+│   │   │   ├── search.types.ts
+│   │   │   ├── strategies/
+│   │   │   │   ├── hybrid-search.ts        # Combines pgvector cosine similarity with full-text tsvector
+│   │   │   │   ├── semantic-search.ts      # Pure vector similarity
+│   │   │   │   └── keyword-search.ts       # Trigram & BM25-style keyword search
+│   │   │   ├── ranking/
+│   │   │   │   ├── rrf.ranker.ts           # Reciprocal Rank Fusion implementation
+│   │   │   │   └── booster.ts              # In-stock, sales, and popularity weight adjusters
+│   │   │   └── aggregations/
+│   │   │       └── facet.builder.ts        # Dynamic categories, brands, price bins, and rating counters
+│   │   │
+│   │   ├── cart/                           # High-Performance Shopping Cart
+│   │   │   ├── cart.controller.ts
+│   │   │   ├── cart.service.ts             # Cart lifecycle orchestrator
+│   │   │   ├── cart.storage.ts             # Redis hash-based fast read/write with TTL
+│   │   │   ├── cart.merger.ts              # Seamless guest session to authenticated user cart merger
+│   │   │   ├── cart.routes.ts
+│   │   │   ├── cart.schema.ts
+│   │   │   └── cart.types.ts
+│   │   │
+│   │   ├── orders/                         # Order Lifecycle & Event Generation
+│   │   │   ├── orders.controller.ts
+│   │   │   ├── orders.service.ts           # Emits ORDER_CREATED / ORDER_CANCELLED to Kafka
+│   │   │   ├── orders.routes.ts
+│   │   │   ├── orders.schema.ts
+│   │   │   └── orders.types.ts
+│   │   │
+│   │   ├── payments/                       # Gateway Integration & Webhooks
+│   │   │   ├── payments.controller.ts      # Stripe/Razorpay webhook receiver
+│   │   │   ├── payments.service.ts         # Payment intent generation & signature verification
+│   │   │   ├── payments.routes.ts
+│   │   │   ├── payments.schema.ts
+│   │   │   └── payments.types.ts
+│   │   │
+│   │   ├── inventory/                      # Stock Allocation & Reservations
+│   │   │   ├── inventory.controller.ts
+│   │   │   ├── inventory.service.ts        # Handles stock locks, decrementing, and replenishment
+│   │   │   ├── inventory.routes.ts
+│   │   │   ├── inventory.schema.ts
+│   │   │   └── inventory.types.ts
+│   │   │
+│   │   ├── notifications/                  # Transactional Communication Trigger
+│   │   │   ├── notifications.service.ts    # Dispatches email/SMS/push notifications
+│   │   │   ├── notifications.routes.ts
+│   │   │   └── templates/                  # Email HTML/Text templates (Order Confirmation, Refund)
+│   │   │
+│   │   └── ai/                             # Conversational AI, Multi-Agent & RAG Workspace
+│   │       ├── ai.controller.ts            # SSE streaming & WebSocket connection handlers
+│   │       ├── ai.routes.ts
+│   │       │
+│   │       ├── orchestrator/               # Agent Execution Engine
+│   │       │   ├── agent.service.ts        # ReAct / Tool-calling loop coordinator
+│   │       │   ├── memory.service.ts       # Short-term chat history in Redis with window buffering
+│   │       │   └── stream.service.ts       # Server-Sent Events (SSE) token and event emitter
+│   │       │
+│   │       ├── rag/                        # Retrieval-Augmented Generation
+│   │       │   ├── vector-store.ts         # pgvector query layer (hybrid search interface)
+│   │       │   ├── chunker.service.ts      # Markdown/PDF text tokenization and chunking
+│   │       │   ├── embedding.service.ts    # Embeddings generator (OpenAI text-embedding-3, etc.)
+│   │       │   └── metadata-filter.ts      # Role-based & tenant-based data isolation
+│   │       │
+│   │       ├── tools/                      # Agent Tool Registry & Execution Layer
+│   │       │   ├── registry.ts             # Master registry associating tool definitions with implementations
+│   │       │   ├── guardrails.ts           # Zod schema checks + Caller role permissions verification
+│   │       │   └── implementations/
+│   │       │       ├── search-catalog.tool.ts   # Calls SearchService.executeSearch()
+│   │       │       ├── manage-cart.tool.ts      # Adds/removes items via CartService
+│   │       │       ├── get-order-status.tool.ts # Fetches user-specific order details
+│   │       │       ├── query-runbooks.tool.ts   # Internal support RAG lookup
+│   │       │       └── issue-refund.tool.ts     # Protected action (requires Admin / Manager role)
+│   │       │
+│   │       └── hitl/                       # Human-in-the-Loop Governance
+│   │           ├── hitl.service.ts         # Holds agent action, publishes Kafka approval event, resumes on callback
+│   │           └── hitl.model.ts           # PostgreSQL schema for paused/pending administrative actions
+│   │
+│   ├── workers/                            # Independent Background Kafka Consumers
+│   │   ├── index.ts                        # Master worker initialization script
+│   │   ├── ingestion.worker.ts             # Consumes S3 upload events -> Chunks -> Embeds into pgvector
+│   │   ├── order.worker.ts                 # Consumes ORDER_CREATED -> Triggers inventory locks & fulfillment
+│   │   ├── payment.worker.ts               # Consumes PAYMENT_SUCCESS -> Transitions order state
+│   │   ├── notification.worker.ts          # Consumes order/refund events -> Sends emails to customers
+│   │   └── audit.worker.ts                 # Consumes AI_AGENT_ACTIVITY -> Appends immutable compliance logs
+│   │
+│   ├── types/                              # Global TypeScript interfaces and ambient declarations
+│   │   ├── express.d.ts                    # Extends Express.Request with authenticated user payload
+│   │   └── common.ts                       # Generic paginated responses, sort orders, status codes
+│   │
+│   ├── app.ts                              # Express app configuration (CORS, middlewares, route mounting)
+│   └── server.ts                           # Server listener, graceful shutdown triggers (SIGTERM/SIGINT)
+│
+├── .dockerignore
+├── .env.example
+├── .eslintrc.js
+├── .gitignore
+├── .prettierrc
+├── package.json
+├── tsconfig.json
+└── README.md                               # Architecture diagram, technical decisions, setup instructions

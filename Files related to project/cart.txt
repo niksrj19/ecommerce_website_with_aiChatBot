@@ -1,0 +1,9 @@
+src/modules/
+└── cart/
+    ├── cart.controller.ts       # Get cart, add/update/remove items, apply promo code
+    ├── cart.routes.ts           # Route declarations (/api/v1/cart)
+    ├── cart.service.ts          # Core cart lifecycle & Redis storage logic
+    ├── cart.schema.ts           # Zod validation (item ID, quantity, variant)
+    ├── cart.storage.ts          # Redis-backed fast transient cart read/write
+    ├── cart.merger.ts           # Merges anonymous guest session cart into user cart on login
+    └── cart.types.ts            # Cart, CartItem, Discount interfaces

@@ -1,0 +1,80 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  MANAGER
+}
+
+model User {
+  id                  String   @id @default(uuid())
+  email               String   @unique
+  googleId            String   @unique @map("google_id")
+  hashedRefreshToken  String?  @map("hashed_refresh_token")
+  role                Role     @default(USER)
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Product {
+  id          String         @id @default(uuid())
+  title       String
+  description String         @db.Text
+  brand       String
+  category    String
+  price       Decimal        @db.Decimal(10, 2)
+  imageUrl    String         @map("image_url") // Added primary image URL column
+  sizes       String[]
+  colors      String[]
+  inStock     Boolean        @default(true) @map("in_stock")
+  inventory   Inventory[]    // 1-to-many relation with inventory entries
+  images      ProductImage[] // 1-to-many relation for product gallery
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+  
+  @@index([category])
+  @@index([brand])
+  @@index([price])
+  @@map("products")
+}
+
+model ProductImage {
+  id        String   @id @default(uuid())
+  url       String
+  altText   String?  @map("alt_text")
+  productId String   @map("product_id")
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("product_images")
+}
+
+model Inventory {
+  id              String   @id @default(uuid())
+  productId       String   @map("product_id")
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  categorySku     String   @map("category_sku")
+  color           String?
+  size            String?
+  quantityInStock Int      @default(0) @map("quantity_in_stock")
+  unitPrice       Decimal  @map("unit_price") @db.Decimal(10, 2)
+  reserved        Int      @default(0)
+  storeId         String   @map("store_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@unique([storeId, productId, categorySku])
+  @@index([productId])
+  @@index([storeId])
+  @@map("inventory")
+}

@@ -1,0 +1,28 @@
+Implement the Inventory Management Module to handle product stock tracking and warehouse store associations.
+1. Database Schema (prisma/schema.prisma):
+Create an Inventory model with a strict foreign key relation to the Product model.
+
+id: String / UUID (Primary Key)
+productId: Foreign key referencing Product.id (Required; prevent inventory creation if the referenced product does not exist).
+categorySku: String (Unique identifier combining category and stock variant info).
+color: String (Optional or required depending on variant).
+size: String (Optional or required depending on variant).
+quantityInStock: Integer (Default: 0, must be non-negative).
+unitPrice: Decimal (Price per unit stored as @db.Decimal(10, 2)).
+totalValue: Calculated field or database computed column (quantityInStock * unitPrice).
+reserved: Integer (Default: 0, represents items locked in active checkouts).
+storeId: String  (Identifies the warehouse or store location).
+createdAt & updatedAt: Timestamps.
+2. Access Control & Authorization Middleware:
+
+Protect all inventory modification routes (POST, PUT, PATCH, DELETE) with an isAdmin authorization middleware to ensure only Admin users can add or modify inventory records.
+3. Validation & Business Logic (Zod Validation):
+
+Validate input types using Zod schemas.
+Validate that quantityInStock and unitPrice are non-negative numbers.
+Ensure atomic updates using Prisma operations (e.g., increment or decrement) when stock or reserved quantities change to prevent race conditions.
+4. API Endpoints:
+
+POST /api/inventory: Create an inventory entry for an existing productId (Return 404 Not Found if productId does not exist, 403 Forbidden if non-admin).
+PATCH /api/inventory/:id: Admin-only route to update stock levels, reserved units, or unit prices.
+GET /api/inventory/product/:productId: Fetch stock levels and store distribution for a specific product.

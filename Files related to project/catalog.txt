@@ -1,0 +1,53 @@
+"Implement a paginated and filterable product listing API endpoint (GET /api/products).
+
+Request Query Parameters:
+
+
+
+page (number, default: 1)
+
+limit (number, default: 20)
+
+size (comma-separated list or array, optional)
+
+color (comma-separated list or array, optional)
+
+category (string or array, e.g., 'sports', 'casual', optional)
+
+brand (string or array, optional)
+
+minPrice & maxPrice (numbers, optional for price range filtering)
+
+Backend Implementation Requirements:
+
+
+
+Use Prisma to construct a dynamic where clause to filter products on the database level using where, AND, in, and gte/lte for prices.
+
+Apply offset-based pagination using skip: (page - 1) * limit and take: limit.
+
+Return a JSON response containing:
+
+products: Array of 20 filtered items.
+
+pagination: { totalItems, totalPages, currentPage, limit }."
+
+
+
+
+
+
+
+// create product
+
+"Create an API endpoint POST /api/products to create a new product based on our Prisma schema.
+
+Requirements:
+
+Authorization: Protect the endpoint with authentication middleware to ensure only Admin users can create products.
+
+Validation: Validate the request body (e.g., using Zod/Joi) ensuring name, title, brand, and required fields are present and correctly typed (e.g., price must be a positive number).
+
+Image Handling: Accept product image URLs (or support multipart/form-data file uploads) and save their references to the ProductImage table/relation.
+
+Response: Return 201 Created with the full newly created product object, or 400 Bad Request with detailed validation errors."

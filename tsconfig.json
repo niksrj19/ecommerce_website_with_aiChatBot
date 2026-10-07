@@ -1,0 +1,12 @@
+{
+  // Visit https://aka.ms/tsconfig to read more about this file
+  "compilerOptions": {
+    "outDir": "./dist",         // Sends compiled JS, .d.ts, and .map files to a 'dist' folder
+    "rootDir": "./src",
+    "declaration": true,        // Keep if you need to build a library; otherwise set to false
+    "declarationMap": false,    // Set to false if you don't need source maps for .d.ts files
+    "sourceMap": true           // Set to false if you don't need debug maps for JS files
+  },
+  "include": ["src/**/*"],              // 👈 Ensure tsc only compiles files in /src
+  "exclude": ["node_modules", "dist", "prisma"]
+}

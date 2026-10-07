@@ -1,0 +1,101 @@
+aegis-commerce-backend/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                 # Lint, test, typecheck, docker build
+│       └── cd.yml                 # Deploy to AWS ECS/EKS
+├── docker/
+│   ├── Dockerfile
+│   ├── Dockerfile.worker
+│   └── docker-compose.yml         # Local Postgres + pgvector, Kafka, Zookeeper, Redis
+├── scripts/
+│   ├── seed-products.ts
+│   └── seed-vectors.ts
+├── src/
+│   ├── config/                    # Validated environment variables (Zod)
+│   │   ├── env.ts
+│   │   ├── aws.config.ts
+│   │   ├── kafka.config.ts
+│   │   └── redis.config.ts
+│   │
+│   ├── core/                      # Cross-cutting foundational modules
+│   │   ├── database/
+│   │   │   ├── index.ts           # Prisma / Kysely / pg connection pool
+│   │   │   └── migrations/
+│   │   ├── redis/
+│   │   │   ├── client.ts          # Redis instance
+│   │   │   ├── semantic-cache.ts  # Prompt similarity caching
+│   │   │   └── rate-limiter.ts    # Sliding window rate limiter
+│   │   ├── kafka/
+│   │   │   ├── client.ts          # KafkaJS initialization
+│   │   │   ├── producer.ts        # Typed event producer
+│   │   │   └── topics.ts          # Topic definitions (ORDER_EVENTS, AI_AUDIT, etc.)
+│   │   ├── errors/                # Standardized AppError & HTTP exceptions
+│   │   └── logger/                # Winston / Pino structured JSON logger
+│   │
+│   ├── middlewares/               # Express global & route middlewares
+│   │   ├── authenticate.ts        # JWT verification & claims decoding
+│   │   ├── authorize.ts           # RBAC/ABAC role validator middleware
+│   │   ├── error-handler.ts       # Global error handling & safe responses
+│   │   ├── rate-limit.ts          # Redis-backed rate limiter
+│   │   └── validate.ts            # Generic Zod request schema validator
+│   │
+│   ├── modules/                   # Domain-Driven Functional Modules
+│   │   │
+│   │   ├── auth/                  # Authentication & Identity
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── auth.service.ts
+│   │   │   ├── auth.routes.ts
+│   │   │   └── auth.schema.ts
+│   │   │
+│   │   ├── catalog/               # E-commerce Catalog & Products
+│   │   │   ├── catalog.controller.ts
+│   │   │   ├── catalog.service.ts
+│   │   │   ├── catalog.routes.ts
+│   │   │   └── catalog.schema.ts
+│   │   │
+│   │   ├── orders/                # Orders & Checkout (Kafka event-driven)
+│   │   │   ├── orders.controller.ts
+│   │   │   ├── orders.service.ts  # Publishes ORDER_CREATED to Kafka
+│   │   │   ├── orders.routes.ts
+│   │   │   └── orders.schema.ts
+│   │   │
+│   │   └── ai/                    # AI Engine (Agents, RAG, Tooling, Streaming)
+│   │       ├── ai.controller.ts   # SSE & WebSocket endpoints
+│   │       ├── ai.routes.ts
+│   │       │
+│   │       ├── orchestrator/      # LLM Agent Execution Loop
+│   │       │   ├── agent.service.ts       # Coordinates prompt -> tool -> response
+│   │       │   ├── memory.service.ts      # Redis ephemeral conversation history
+│   │       │   └── stream.service.ts      # Server-Sent Events (SSE) token pipeline
+│   │       │
+│   │       ├── rag/               # Retrieval-Augmented Generation
+│   │       │   ├── vector-store.ts        # pgvector interface (hybrid vector/text search)
+│   │       │   ├── chunker.service.ts     # Document chunking & tokenization
+│   │       │   ├── embedding.service.ts   # OpenAI/Cohere embedding generator
+│   │       │   └── metadata-filter.ts     # Role/Tenant-based filtering engine
+│   │       │
+│   │       ├── tools/             # Agent Tool Registry & Execution
+│   │       │   ├── registry.ts            # Master map of executable tools
+│   │       │   ├── guardrails.ts          # Zod schema checks + Role permissions
+│   │       │   └── implementations/
+│   │       │       ├── get-order-status.tool.ts
+│   │       │       ├── issue-refund.tool.ts       # Restricted (requires Admin/Manager)
+│   │       │       ├── search-catalog.tool.ts
+│   │       │       └── query-runbooks.tool.ts
+│   │       │
+│   │       └── hitl/              # Human-in-the-Loop Workflow
+│   │           ├── hitl.service.ts        # Pauses agent action, awaits approval
+│   │           └── hitl.model.ts          # DB schema for pending critical actions
+│   │
+│   ├── workers/                   # Background Consumers (Separate container/process)
+│   │   ├── ingestion.worker.ts    # Consumes DOCUMENT_UPLOADED -> chunks -> pgvector
+│   │   ├── audit.worker.ts        # Consumes AI_AUDIT -> writes to compliance storage
+│   │   └── order.worker.ts        # Consumes ORDER_EVENTS -> inventory updates
+│   │
+│   ├── app.ts                     # Express app setup (routes, middlewares)
+│   └── server.ts                  # HTTP & WebSocket server bootstrapper
+│
+├── .env.example
+├── package.json
+├── tsconfig.json
+└── README.md                      # System architecture, setup steps & API docs

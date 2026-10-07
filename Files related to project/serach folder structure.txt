@@ -1,0 +1,16 @@
+src/modules/
+└── search/
+    ├── search.controller.ts       # Handles search requests, query params, pagination
+    ├── search.routes.ts           # Route declarations (/api/v1/search)
+    ├── search.schema.ts           # Zod validation for search queries, filters, sorting
+    ├── search.service.ts          # Core business orchestrator: checks cache -> executes search -> returns facets
+    ├── strategies/                # Modular search implementations
+    │   ├── hybrid-search.ts       # Combines pgvector cosine similarity + Postgres tsvector/trigram
+    │   ├── semantic-search.ts     # Pure dense vector retrieval via embeddings
+    │   └── keyword-search.ts      # BM25 / PostgreSQL full-text search with fuzzy matching
+    ├── ranking/                   # Relevance & Re-ranking engine
+    │   ├── rrf.ranker.ts          # Reciprocal Rank Fusion (merges vector & keyword score lists)
+    │   └── booster.ts             # Applies business boosts (in-stock, popular, discounts)
+    ├── aggregations/              # Faceting & filters
+    │   └── facet.builder.ts       # Aggregates price ranges, brands, categories, ratings
+    └── search.types.ts            # TypeScript interfaces for queries, facets, and results
