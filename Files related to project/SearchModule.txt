@@ -1,0 +1,34 @@
+"Implement an Enterprise Hybrid Search & Faceting Module (/api/search) using Node.js, TypeScript, PostgreSQL (pgvector + tsvector), Prisma ORM, and Redis for high-performance e-commerce product discovery.
+1. Schema & Database Setup (prisma/schema.prisma & Raw SQL)
+Full-Text Search Index: Ensure PostgreSQL has a generated or indexable tsvector column (search_vector) on the Product table that combines title (Weight A), description (Weight B), and brand.name (Weight B) with an English/Spanish dictionary parser.
+Vector Search Index: Ensure a vector(1536) column (embedding) is enabled on Product via pgvector with an HNSW cosine similarity index.
+2. Search Strategies (src/modules/search/strategies/)
+keyword-search.ts:
+Execute full-text search using tsquery / websearch_to_tsquery combined with pg_trgm (trigram matching) to handle typos and partial phrase matches.
+semantic-search.ts:
+Generate vector embeddings for incoming queries via OpenAI/HuggingFace embeddings API and compute cosine distance (<=> operator in pgvector).
+hybrid-search.ts:
+Run full-text keyword search and vector similarity search concurrently.
+3. Ranking & Merging Engine (src/modules/search/ranking/)
+rrf.ranker.ts (Reciprocal Rank Fusion):
+Implement the RRF algorithm to merge non-comparable scores from keyword search and vector search into a unified rank score:
+$$\text{RRF\_Score}(d) = \sum_{m \in M} \frac{1}{k + r_m(d)}$$
+(Default $k = 60$).
+booster.ts (Business Weighting):
+Post-process and adjust ranking scores based on real-time business metrics:
+Multiply score by 1.2x if inventory.quantityInStock > 0 (Penalize out-of-stock items).
+Add boost multipliers for high popularity, sales volume, or featured products.
+4. Aggregations & Dynamic Facets (src/modules/search/aggregations/)
+facet.builder.ts:
+Return real-time facet counters corresponding to the current query result set:
+Brands: List of brand names with product counts { name, slug, count }.
+Categories: Dynamic tree/list with matching item counts.
+Price Bins: Minimum price, maximum price, and distributed bucket ranges (e.g., $0–$50, $50–$100).
+Ratings & Availability: Counts for inStock vs outOfStock.
+5. Caching, Schema & Controller Architecture
+search.schema.ts (Zod Input Validation):
+Parse query parameters: q (string), brand (array/string), category (string), minPrice, maxPrice, inStock (boolean), sortBy (relevance, price_asc, price_desc, newest), page, and limit.
+search.service.ts:
+Intercept incoming search queries with a Redis caching layer (redis.get("search:hash(query)")). Return cached response on hit; compute hybrid results, run RRF, apply boosters, build facets, and store in Redis (TTL: 5–15 minutes) on miss.
+search.routes.ts & search.controller.ts:
+Expose GET /api/search (Public endpoint with low latency < 150ms budget). Return structured response:

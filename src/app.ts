@@ -6,6 +6,7 @@ import { catalogRoutes } from "./modules/catalog/catalog.routes";
 // In src/app.ts
 import { inventoryRoutes } from "./modules/inventory/inventory.routes";
 import cookieParser from "cookie-parser";
+import { searchRoutes } from "./modules/search/search.routes";
 // import { brandRoutes } from "./modules/brands/brand.routes";
 
 export const createApp = (): Application => {
@@ -24,6 +25,7 @@ app.use(cookieParser());
   app.use("/api", catalogRoutes);
   app.use("/api/inventory", inventoryRoutes);
   // app.use("/api/brands", brandRoutes);
+  app.use("/api/search", searchRoutes);
 
   // Basic Health Check
   app.get("/health", (_req: Request, res: Response) => {
