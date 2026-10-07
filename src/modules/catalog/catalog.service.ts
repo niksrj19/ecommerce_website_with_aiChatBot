@@ -2,6 +2,7 @@
 import { Prisma } from "@prisma/client";
 import { db } from "../../core/database";
 import { CreateProductInput, GetProductsQuery , UpdateProductInput } from "./catalog.schema";
+import { SemanticSearchStrategy } from "../search/strategies/semantic-search";
 
 export class CatalogService {
   static async getProducts(query: GetProductsQuery) {
@@ -124,6 +125,22 @@ export class CatalogService {
         images: true, // Includes the related ProductImage objects in the response
       },
     });
+
+    // Generate and store embedding (or dispatch to Kafka in an event-driven setup)
+  // WILL ENABLE LATER ON PRODUCTION 
+    // try {
+//   const textToEmbed = `${newProduct.title} ${newProduct.brand} ${newProduct.category} ${newProduct.description}`;
+//   const vector = await SemanticSearchStrategy.generateEmbedding(textToEmbed);
+//   const vectorString = `[${vector.join(",")}]`;
+
+//   await db.$executeRawUnsafe(
+//     `UPDATE "products" SET embedding = $1::vector WHERE id = $2`,
+//     vectorString,
+//     newProduct.id
+//   );
+// } catch (error) {
+//   console.error("Failed to generate embedding at product creation:", error);
+// }
 
     return newProduct;
   }
