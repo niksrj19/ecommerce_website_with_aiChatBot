@@ -13,6 +13,10 @@ export class HybridSearchStrategy {
       SemanticSearchStrategy.execute(query, candidateLimit),
     ]);
 
+    debugger; // 👈 Debugging breakpoint to inspect keywordHits and semanticHits
+
+    console.log("Keyword Hits:", keywordHits);
+    console.log("Semantic Hits:", semanticHits);
     return { keywordHits, semanticHits };
   }
 }
