@@ -27,21 +27,25 @@ model User {
 }
 
 model Product {
-  id          String         @id @default(uuid())
-  title       String
-  description String         @db.Text
-  brand       String
-  category    String
-  price       Decimal        @db.Decimal(10, 2)
-  imageUrl    String         @map("image_url") // Added primary image URL column
-  sizes       String[]
-  colors      String[]
-  inStock     Boolean        @default(true) @map("in_stock")
-  inventory   Inventory[]    // 1-to-many relation with inventory entries
-  images      ProductImage[] // 1-to-many relation for product gallery
-  createdAt   DateTime       @default(now()) @map("created_at")
-  updatedAt   DateTime       @updatedAt @map("updated_at")
-  
+  id            String                      @id @default(uuid())
+  title         String
+  description   String                      @db.Text
+  brand         String
+  category      String
+  price         Decimal                     @db.Decimal(10, 2)
+  imageUrl      String                      @map("image_url")
+  sizes         String[]
+  colors        String[]
+  inStock       Boolean                     @default(true) @map("in_stock")
+  salesCount    Int                         @default(0) @map("sales_count")
+  isFeatured    Boolean                     @default(false) @map("is_featured")
+  embedding     Unsupported("vector(1536)")?
+  searchVector  Unsupported("tsvector")?    @map("search_vector")
+  images        ProductImage[]
+  inventory     Inventory[]
+  createdAt     DateTime                    @default(now()) @map("created_at")
+  updatedAt     DateTime                    @updatedAt @map("updated_at")
+
   @@index([category])
   @@index([brand])
   @@index([price])
