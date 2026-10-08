@@ -28,6 +28,7 @@
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^10.0.16",
     "openai": "^7.30.0",
+    "razorpay": "^2.9.8",
     "zod": "^4.6.5"
   },
   "devDependencies": {

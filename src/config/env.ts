@@ -25,6 +25,10 @@ const envSchema = z.object({
   SMTP_SECURE: z.coerce.boolean().default(false),
   SMTP_USER: z.string().min(1),
   SMTP_PASS: z.string().min(1),
+  PAYMENT_GATEWAY: z.enum(["RAZORPAY", "STRIPE"]).default("RAZORPAY"),
+PAYMENT_KEY_ID: z.string().min(1),
+PAYMENT_KEY_SECRET: z.string().min(1),
+PAYMENT_WEBHOOK_SECRET: z.string().min(1),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
