@@ -7,3 +7,55 @@ src/modules/
     ├── cart.storage.ts          # Redis-backed fast transient cart read/write
     ├── cart.merger.ts           # Merges anonymous guest session cart into user cart on login
     └── cart.types.ts            # Cart, CartItem, Discount interfaces
+
+
+
+
+"Implement a high-performance Cart Module (/api/cart) following our standard directory structure:
+
+├── cart/
+│   ├── cart.controller.ts
+│   ├── cart.service.ts      # Cart lifecycle, price validation, and stock checking
+│   ├── cart.storage.ts      # Redis Hash operations (HSET, HGET, HDEL, EXPIRE)
+│   ├── cart.merger.ts       # Merges guest session cart into user account cart upon login
+│   ├── cart.routes.ts
+│   ├── cart.schema.ts       # Zod validation schemas
+│   └── cart.types.ts        # TypeScript interfaces for Cart & CartItem
+
+
+
+1. Dual-Mode Cart Identification (Guest & Auth)
+Authenticated Users: Cart data is stored under the Redis key cart:user:<userId>.
+Guest Users: Guests receive a temporary sessionId (via HTTP header x-session-id or signed cookie). Guest cart data is stored under cart:guest:<sessionId> with a shorter TTL (e.g., 24–48 hours).
+Variant Key Generation: A unique cart line item is identified by the composite key ${productId}:${size}:${color}. Adding the same product with a different variant creates a separate item.
+2. Session Cart Merger Logic (cart.merger.ts)
+Implement a mergeGuestCartToUserCart(sessionId: string, userId: string) function triggered upon user login or explicit merge API call.
+Merging Strategy:
+Fetch all items from cart:guest:<sessionId> and cart:user:<userId>.
+For matching variant keys (productId + size + color), sum the quantities:
+$$\text{Quantity}_{\text{final}} = \min(\text{Quantity}_{\text{guest}} + \text{Quantity}_{\text{user}}, \text{Stock}_{\text{available}})$$
+Append new guest items to the user cart.
+Save the merged result to cart:user:<userId>.
+Clean up: Delete cart:guest:<sessionId> from Redis upon completion.
+3. API Endpoints (/api/cart)
+GET /api/cart (Public - Guest or Auth)
+Resolves user ID or session ID from headers/auth context.
+Fetches cart items from Redis, validates current pricing and stock in PostgreSQL via Prisma, and returns enriched cart data with total amounts and warnings if stock changed.
+POST /api/cart/items (Public - Guest or Auth)
+Validate input via Zod: productId (UUID), quantity (positive integer), size (string), color (string).
+Check inventory stock in PostgreSQL. If requested quantity exceeds available stock, return 400 Bad Request.
+Persist/increment item in Redis under cart:user:<userId> or cart:guest:<sessionId>.
+PUT /api/cart/items (Public - Guest or Auth)
+Update item quantity for a specific variant (productId, size, color).
+If quantity === 0, remove the item (HDEL).
+POST /api/cart/merge (Authenticated Only)
+Accepts { sessionId: string } in body.
+Executes cart.merger.ts logic to consolidate guest items into the authenticated account.
+DELETE /api/cart/items (Public - Guest or Auth)
+Remove a specific variant line item from Redis.
+DELETE /api/cart (Public - Guest or Auth)
+Flush the guest or user cart key in Redis (DEL).
+4. Error Handling & Edge Cases
+400 Bad Request: Invalid Zod payload or quantity exceeds inventory.quantityInStock.
+404 Not Found: Product or variant does not exist.
+500 Internal Server Error: Redis failure or unhandled exception."

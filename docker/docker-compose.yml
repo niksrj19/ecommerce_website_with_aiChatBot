@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: aegis_redis
+    command: redis-server --appendonly yes --requirepass ""
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data   # <-- Mounts persistent storage inside container
+    restart: unless-stopped
+
+volumes:
+  redis_data:             # <-- Named volume survives container destruction

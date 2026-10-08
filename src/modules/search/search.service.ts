@@ -1,5 +1,5 @@
 import crypto from "crypto";
-// import { redis } from "../../core/redis/client";
+import { redis } from "../../core/redis/client";
 import { SearchQueryParams } from "./search.schema";
 import { SearchResponse, SearchHit } from "./search.types";
 import { HybridSearchStrategy } from "./strategies/hybrid-search";
@@ -22,15 +22,15 @@ export class SearchService {
     const cacheKey = `search:${hash}`;
 
     // 2. Intercept Cache Hit
-    // const cachedData = await redis.get(cacheKey);
-    // if (cachedData) {
-    //   const response: SearchResponse = JSON.parse(cachedData);
-    //   response.performance = {
-    //     tookMs: Math.round(performance.now() - startTime),
-    //     cached: true,
-    //   };
-    //   return response;
-    // }
+    const cachedData = await redis.get(cacheKey);
+    if (cachedData) {
+      const response: SearchResponse = JSON.parse(cachedData);
+      response.performance = {
+        tookMs: Math.round(performance.now() - startTime),
+        cached: true,
+      };
+      return response;
+    }
 
     let candidateHits: SearchHit[] = [];
 
@@ -103,7 +103,7 @@ export class SearchService {
     };
 
     // 8. Cache response asynchronously
-    // await redis.set(cacheKey, JSON.stringify(response), "EX", this.CACHE_TTL_SECONDS);
+    await redis.set(cacheKey, JSON.stringify(response), "EX", this.CACHE_TTL_SECONDS);
 
     return response;
   }
