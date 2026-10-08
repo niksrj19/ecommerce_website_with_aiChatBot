@@ -16,6 +16,15 @@ const envSchema = z.object({
   CLIENT_URL: z.string().url().default("http://localhost:3000"),
   OPENAI_API_KEY: z.string().min(1),
   GEMINI_API_KEY: z.string().min(1),
+  REDIS_HOST : z.string().default("127.0.0.1"),
+  REDIS_PORT : z.coerce.number().default(6379),
+  REDIS_PASSWORD : z.string().optional(),
+  REDIS_DB :  z.coerce.number().default(0),
+  SMTP_HOST: z.string().min(1),
+  SMTP_PORT: z.coerce.number().default(465),
+  SMTP_SECURE: z.coerce.boolean().default(false),
+  SMTP_USER: z.string().min(1),
+  SMTP_PASS: z.string().min(1),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

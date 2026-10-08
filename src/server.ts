@@ -1,6 +1,7 @@
 import http from "node:http";
 import { createApp } from "./app.js";
 import { env } from "./config/env.js";
+import "./modules/order/order.worker";
 
 const app = createApp();
 const server = http.createServer(app);

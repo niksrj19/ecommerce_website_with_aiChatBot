@@ -1,0 +1,53 @@
+├── address/
+│   ├── address.controller.ts
+│   ├── address.service.ts      # Multi-address CRUD & primary address toggle logic
+│   ├── address.routes.ts
+│   ├── address.schema.ts       # Zod validation schemas
+│   └── address.types.ts        # TypeScript definitions
+
+
+Implement a complete, secure Address Module (/api/addresses) in Node.js and TypeScript adhering to our modular directory structure:
+
+Plaintext
+
+├── address/
+│   ├── address.controller.ts
+│   ├── address.service.ts      # Multi-address CRUD & primary address toggle logic
+│   ├── address.routes.ts
+│   ├── address.schema.ts       # Zod validation schemas
+│   └── address.types.ts        # TypeScript definitions
+1. Relational Architecture & Security Rules
+User Relation (1-to-Many): A user can save multiple addresses connected via userId.
+Order Association: Orders link to the chosen addressId and snapshot the exact address details into shippingAddress Json.
+Data Isolation: Users can only view, create, or delete addresses tied to their own authenticated session (userId). Unauthenticated requests return 401 Unauthorized, and unauthorized access to another user's address returns 404 Not Found or 403 Forbidden.
+Single Primary Address Constraint: A user can have at most one address with isPrimary: true.
+2. Service Layer Logic (address.service.ts)
+Auto-Primary First Address: If a user saves an address and currently has zero existing addresses, force isPrimary = true.
+Primary Address Re-assignment: If an address is created or updated with isPrimary: true, run a database transaction (prisma.$transaction) to set isPrimary = false on all other addresses belonging to that user before setting the current address to true.
+Deletion Fallback: If a user deletes their current primary address, automatically locate their most recently created remaining address and update it to isPrimary = true.
+3. API Endpoints Specification (/api/addresses)
+1. GET /api/addresses (List User Addresses)
+Auth: Required (authMiddleware).
+Response: 200 OK with an array of addresses for the logged-in user, sorted by isPrimary DESC and createdAt DESC.
+2. POST /api/addresses (Create Address)
+Auth: Required.
+Body (Zod validated):
+firstName (string, required)
+lastName (string, optional)
+addressLine1 (string, required)
+addressLine2 (string, optional)
+pincode (string, required)
+state (string, required)
+country (string, optional, default: "India")
+deliveryInstruction (string, optional)
+isPrimary (boolean, optional, default: false)
+Response: 201 Created with the newly saved address object.
+3. DELETE /api/addresses/:addressId (Delete Address)
+Auth: Required.
+Params: addressId (UUID string).
+Process: Validates user ownership, deletes the record, and re-assigns primary status if necessary.
+Response: 200 OK ({ "message": "Address deleted successfully" }).
+4. Error Handling
+400 Bad Request: Validation errors on required input fields (firstName, addressLine1, pincode, state).
+401 Unauthorized: Missing or invalid JWT token.
+404 Not Found: Target address ID does not exist or does not belong to the authenticated user."

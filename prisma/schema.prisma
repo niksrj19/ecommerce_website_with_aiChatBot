@@ -14,12 +14,30 @@ enum Role {
   MANAGER
 }
 
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
 model User {
   id                  String   @id @default(uuid())
   email               String   @unique
   googleId            String   @unique @map("google_id")
   hashedRefreshToken  String?  @map("hashed_refresh_token")
   role                Role     @default(USER)
+  orders              Order[]  // User to Orders relation
+  addresses           Address[] // One-to-Many relation to Address
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")
 
@@ -42,6 +60,7 @@ model Product {
   embedding     Unsupported("vector(1536)")?
   searchVector  Unsupported("tsvector")?    @map("search_vector")
   images        ProductImage[]
+  orderItems    OrderItem[]    // Relation to OrderItem
   inventory     Inventory[]
   createdAt     DateTime                    @default(now()) @map("created_at")
   updatedAt     DateTime                    @updatedAt @map("updated_at")
@@ -81,4 +100,67 @@ model Inventory {
   @@index([productId])
   @@index([storeId])
   @@map("inventory")
+}
+
+
+model Order {
+  id              String         @id @default(uuid())
+  userId          String         @map("user_id")
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paymentStatus   PaymentStatus  @default(PENDING) @map("payment_status")
+  paymentMethod   String         @map("payment_method")
+  totalAmount     Decimal        @map("total_amount") @db.Decimal(10, 2)
+  addressId       String?       @map("address_id")
+  address         Address?      @relation(fields: [addressId], references: [id], onDelete: SetNull)
+  status          OrderStatus   @default(PENDING)
+  shippingAddress Json          @map("shipping_address") // Immutable snapshot at time of purchase
+  items           OrderItem[]
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([status])
+  @@index([addressId])
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String   @map("order_id")
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String   @map("product_id")
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  title     String   // Snapshot of title at time of purchase
+  size      String
+  color     String
+  quantity  Int
+  unitPrice Decimal  @map("unit_price") @db.Decimal(10, 2) // Authoritative price snapshot
+  subtotal  Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+model Address {
+  id                  String   @id @default(uuid())
+  userId              String   @map("user_id")
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName           String   @map("first_name")
+  lastName            String?  @map("last_name")
+  addressLine1        String   @map("address_line1")
+  addressLine2        String?  @map("address_line2")
+  pincode             String
+  state               String
+  country             String   @default("India")
+  deliveryInstruction String?  @map("delivery_instruction")
+  isPrimary           Boolean  @default(false) @map("is_primary")
+  orders              Order[]  // Relation to orders placed using this address
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([userId, isPrimary])
+  @@map("addresses")
 }

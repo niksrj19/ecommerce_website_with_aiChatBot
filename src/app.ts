@@ -7,6 +7,9 @@ import { catalogRoutes } from "./modules/catalog/catalog.routes";
 import { inventoryRoutes } from "./modules/inventory/inventory.routes";
 import cookieParser from "cookie-parser";
 import { searchRoutes } from "./modules/search/search.routes";
+import { cartRoutes } from "./modules/cart/cart.routes";
+import { orderRoutes } from "./modules/order/order.routes";
+import { addressRoutes } from "./modules/address/address.routes";
 // import { brandRoutes } from "./modules/brands/brand.routes";
 
 export const createApp = (): Application => {
@@ -26,6 +29,9 @@ app.use(cookieParser());
   app.use("/api/inventory", inventoryRoutes);
   // app.use("/api/brands", brandRoutes);
   app.use("/api/search", searchRoutes);
+  app.use("/api/cart", cartRoutes);
+  app.use("/api/orders", orderRoutes);
+  app.use("/api/addresses", addressRoutes);
 
   // Basic Health Check
   app.get("/health", (_req: Request, res: Response) => {
