@@ -11,18 +11,24 @@ import { cartRoutes } from "./modules/cart/cart.routes";
 import { orderRoutes } from "./modules/order/order.routes";
 import { addressRoutes } from "./modules/address/address.routes";
 // import { brandRoutes } from "./modules/brands/brand.routes";
+import { paymentRoutes } from "./modules/payment/payment.routes";
 
 export const createApp = (): Application => {
+
   const app = express();
 
   // Standard enterprise middlewares
   app.use(helmet());
   app.use(cors());
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+
   // Add cookie parser middleware HERE
 app.use(cookieParser());
+app.use(express.json());
+app.use("/api/payments", paymentRoutes);
 
+// Global JSON parser for all subsequent routes
+  
+  app.use(express.urlencoded({ extended: true }));
   // Mount Auth Routes
   app.use("/auth", authRoutes);
   app.use("/api", catalogRoutes);

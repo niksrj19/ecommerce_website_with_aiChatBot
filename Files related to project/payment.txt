@@ -1,0 +1,93 @@
+"Implement a complete, secure Payment Module (/api/payments) in Node.js and TypeScript adhering to our modular directory structure:
+
+Plaintext
+├── payment/
+│   ├── payment.controller.ts
+│   ├── payment.service.ts      # Gateway integration (Razorpay/Stripe), order linking, & transaction logic
+│   ├── payment.webhook.ts      # Signature validation & asynchronous webhook event listener
+│   ├── payment.routes.ts
+│   ├── payment.schema.ts       # Zod validation schemas
+│   └── payment.types.ts        # Payment TypeScript interfaces
+1. Architecture & Gateway Integration Workflow
+We use a two-step payment flow with webhook verification (Razorpay/Stripe) to prevent payment fraud and handle unexpected client drop-offs:
+
+Order Creation & Payment Intent (POST /api/payments/create-intent):
+
+Client requests a payment intent/gateway order ID by passing the internal orderId.
+
+Service validates that the order belongs to the user and is in PENDING status.
+
+Service calls Payment Gateway SDK (e.g., Razorpay Orders API or Stripe PaymentIntents API) to create a checkout session.
+
+Returns gateway order details (razorpayOrderId, amount, currency, keyId) to the frontend SDK.
+
+Webhook Verification (POST /api/payments/webhook):
+
+Listens for raw HTTP webhook POST requests from the Payment Gateway.
+
+Signature Verification: Validates the cryptographically signed header using the secret webhook key (PAYMENT_WEBHOOK_SECRET).
+
+Database Update: On payment.captured / payment_intent.succeeded:
+
+Updates Order status to CONFIRMED and paymentStatus to PAID in PostgreSQL inside a prisma.$transaction.
+
+Stores payment reference metadata (transaction ID, payment method used).
+
+Queue Trigger: Dispatches a BullMQ job (order-processing) to send the payment & order confirmation email asynchronously.
+
+Returns 200 OK to the gateway immediately.
+
+2. Environment Variables Required
+Code snippet
+PAYMENT_GATEWAY=RAZORPAY # or STRIPE
+PAYMENT_KEY_ID=your_public_key_id
+PAYMENT_KEY_SECRET=your_private_key_secret
+PAYMENT_WEBHOOK_SECRET=your_webhook_signing_secret
+3. API Endpoints Specification (/api/payments)
+1. POST /api/payments/create-intent (Initialize Gateway Transaction)
+Auth: Required (authMiddleware).
+
+Body (Zod Validated): { orderId: string }
+
+Logic:
+
+Verifies that orderId exists, belongs to the authenticated user, and has paymentStatus == PENDING.
+
+Initiates order session with Payment Gateway for order.totalAmount.
+
+Response: 200 OK with gateway payload required for frontend checkout SDK initialization.
+
+2. POST /api/payments/verify (Client Sync Verification - Optional Backup)
+Auth: Required (authMiddleware).
+
+Body (Zod Validated): { orderId: string, paymentId: string, signature: string }
+
+Logic: Immediate client-side verification fallback using HMAC SHA256 signature verification before webhook arrives.
+
+Response: 200 OK ({ success: true, message: "Payment verified successfully" }).
+
+3. POST /api/payments/webhook (Asynchronous Gateway Listener)
+Auth: None (Public endpoint, protected exclusively via HMAC signature validation).
+
+Body: Raw request body buffer.
+
+Logic:
+
+Verifies raw body against signature header.
+
+Updates DB status transactionally.
+
+Triggers BullMQ background job for notifications.
+
+Response: 200 OK.
+
+4. Security & Error Handling
+Raw Body Parsing: Ensure express raw body middleware is enabled for /api/payments/webhook to support cryptographic signature verification.
+
+Idempotency: Webhook processing must be idempotent—handling the same payment event multiple times must not generate duplicate background jobs or DB inconsistencies.
+
+400 Bad Request: Invalid signature or order already paid.
+
+401 Unauthorized: Unauthenticated intent creation attempt.
+
+404 Not Found: Order ID invalid or unauthorized access attempt."

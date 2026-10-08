@@ -114,14 +114,20 @@ model Order {
   address         Address?      @relation(fields: [addressId], references: [id], onDelete: SetNull)
   status          OrderStatus   @default(PENDING)
   shippingAddress Json          @map("shipping_address") // Immutable snapshot at time of purchase
+  
+  gatewayOrderId  String?       @unique @map("gateway_order_id")
+  paymentId       String?       @unique @map("payment_id")
   items           OrderItem[]
-  createdAt       DateTime       @default(now()) @map("created_at")
-  updatedAt       DateTime       @updatedAt @map("updated_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
 
   @@index([userId])
-  @@index([status])
-  @@index([addressId])
+  @@index([gatewayOrderId])
+  @@index([paymentId])
   @@map("orders")
+  
+
+  
 }
 
 model OrderItem {
@@ -164,3 +170,4 @@ model Address {
   @@index([userId, isPrimary])
   @@map("addresses")
 }
+
