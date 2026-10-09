@@ -20,7 +20,7 @@ export class SemanticSearchStrategy {
 
    static async generateEmbedding(text: string): Promise<number[]> {
     const response = await ai.models.embedContent({
-      model: 'gemini-embedding-001',
+      model: env.GEMINI_API_MODEL,
       contents: text.replace(/\n/g, " "),
       config: {
         outputDimensionality: 1536, // 👈 Truncates the 3072 vector to exactly 1536 dimensions
@@ -43,7 +43,7 @@ export class SemanticSearchStrategy {
     const vector = await this.generateEmbedding(query.q);
     const vectorString = `[${vector.join(",")}]`;
 
-    console.log("Generated embedding vector:", vectorString);
+    // console.log("Generated embedding vector:", vectorString);
 
     const rawRows = await db.$queryRaw<any[]>`
       SELECT 

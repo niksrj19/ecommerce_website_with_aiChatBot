@@ -171,3 +171,44 @@ model Address {
   @@map("addresses")
 }
 
+
+
+// prisma/schema.prisma
+
+enum HitlStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model HitlApproval {
+  id          String     @id @default(uuid())
+  userId      String     @map("user_id")
+  sessionId   String     @map("session_id")
+  actionType  String     @map("action_type") // e.g. "ISSUE_REFUND"
+  payload     Json       // Tool arguments & contextual snapshot
+  amount      Decimal?   @db.Decimal(10, 2)
+  status      HitlStatus @default(PENDING)
+  reviewedBy  String?    @map("reviewed_by")
+  rejectionReason String? @map("rejection_reason")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([status])
+  @@map("hitl_approvals")
+}
+
+model KnowledgeDocument {
+  id          String                      @id @default(uuid())
+  title       String
+  content     String                      @db.Text
+  minRole     Role                        @default(USER) @map("min_role")
+  department  String                      @default("support")
+  embedding   Unsupported("vector(1536)")?
+  searchVector Unsupported("tsvector")?   @map("search_vector")
+  createdAt   DateTime                    @default(now()) @map("created_at")
+  updatedAt   DateTime                    @updatedAt @map("updated_at")
+
+  @@map("knowledge_documents")
+}

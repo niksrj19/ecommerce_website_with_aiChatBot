@@ -16,6 +16,7 @@ const envSchema = z.object({
   CLIENT_URL: z.string().url().default("http://localhost:3000"),
   OPENAI_API_KEY: z.string().min(1),
   GEMINI_API_KEY: z.string().min(1),
+  GEMINI_API_MODEL: z.string().min(1).default("gemini-embedding-001"),
   REDIS_HOST : z.string().default("127.0.0.1"),
   REDIS_PORT : z.coerce.number().default(6379),
   REDIS_PASSWORD : z.string().optional(),
@@ -26,9 +27,13 @@ const envSchema = z.object({
   SMTP_USER: z.string().min(1),
   SMTP_PASS: z.string().min(1),
   PAYMENT_GATEWAY: z.enum(["RAZORPAY", "STRIPE"]).default("RAZORPAY"),
-PAYMENT_KEY_ID: z.string().min(1),
-PAYMENT_KEY_SECRET: z.string().min(1),
-PAYMENT_WEBHOOK_SECRET: z.string().min(1),
+  PAYMENT_KEY_ID: z.string().min(1),
+  PAYMENT_KEY_SECRET: z.string().min(1),
+  PAYMENT_WEBHOOK_SECRET: z.string().min(1),
+  KAFKA_BROKERS: z.string().default("localhost:9092"),
+  KAFKA_CLIENT_ID: z.string().default("aegis-commerce-backend"),
+  GROQ_API_KEY: z.string().min(1),
+  GROQ_MODEL: z.string().min(1)
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
