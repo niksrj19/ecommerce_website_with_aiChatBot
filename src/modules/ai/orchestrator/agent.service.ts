@@ -57,6 +57,8 @@ export class AgentService {
 
       console.log("Constructed messages for Groq API:", messages);
       console.log("Available tools for agent:", Object.keys(AGENT_TOOLS));
+      console.log("Tool Parameters for Groq API:", JSON.stringify(AGENT_TOOL_DEFINITIONS.map((t) => ({  parameters: t.function.parameters }) )));
+      console.log("Initiating streaming response from Groq API...");
 
       let loopCount = 0;
       const MAX_LOOPS = 5;
