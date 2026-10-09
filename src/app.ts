@@ -12,6 +12,7 @@ import { orderRoutes } from "./modules/order/order.routes";
 import { addressRoutes } from "./modules/address/address.routes";
 // import { brandRoutes } from "./modules/brands/brand.routes";
 import { paymentRoutes } from "./modules/payment/payment.routes";
+import { aiRoutes } from "./modules/ai/ai.routes";
 
 export const createApp = (): Application => {
 
@@ -38,6 +39,7 @@ app.use("/api/payments", paymentRoutes);
   app.use("/api/cart", cartRoutes);
   app.use("/api/orders", orderRoutes);
   app.use("/api/addresses", addressRoutes);
+  app.use("/api/ai", aiRoutes);
 
   // Basic Health Check
   app.get("/health", (_req: Request, res: Response) => {

@@ -1,0 +1,94 @@
+"Implement an enterprise-grade, agentic Customer Support Conversational AI Engine (/api/ai) in Node.js and TypeScript, adhering to our workspace architecture:
+
+Plaintext
+└── ai/
+    ├── ai.controller.ts            # SSE streaming & WebSocket connection handlers
+    ├── ai.routes.ts
+    ├── orchestrator/               # Agent Execution Engine
+    │   ├── agent.service.ts        # ReAct / Tool-calling loop coordinator
+    │   ├── memory.service.ts       # Short-term chat history in Redis with sliding window buffering
+    │   └── stream.service.ts       # Server-Sent Events (SSE) token and event emitter
+    ├── rag/                        # Retrieval-Augmented Generation
+    │   ├── vector-store.ts         # pgvector query layer (hybrid full-text + vector search)
+    │   ├── chunker.service.ts      # Markdown/PDF text tokenization and chunking
+    │   ├── embedding.service.ts    # Embeddings generator (OpenAI text-embedding-3-small/large)
+    │   └── metadata-filter.ts      # Role-based & tenant-based data isolation
+    ├── tools/                      # Agent Tool Registry & Execution Layer
+    │   ├── registry.ts             # Master registry mapping tool schemas to handlers
+    │   ├── guardrails.ts           # Zod input/output schema checks + role permission checks
+    │   └── implementations/
+    │       ├── search-catalog.tool.ts  # Executes product catalog search via hybrid search
+    │       ├── manage-cart.tool.ts     # Adds/removes items via Redis CartService
+    │       ├── get-order-status.tool.ts# Fetches latest order details and tracking info
+    │       ├── query-runbooks.tool.ts  # Internal support knowledge base RAG lookup
+    │       └── issue-refund.tool.ts    # High-impact action (requires HITL approval)
+    └── hitl/                       # Human-in-the-Loop Governance
+        ├── hitl.service.ts         # Pauses execution, emits Kafka approval event, resumes on callback
+        └── hitl.model.ts           # Prisma/PostgreSQL schema for pending approval tasks
+1. Core User Capabilities
+The agent must support the following conversational customer support workflows:
+
+Order Lookup & Recent Orders: Retrieve the user's latest placed order or order history.
+
+Order Status & Real-time Tracking: Provide live fulfillment and shipment status for a given orderId.
+
+Order Cancellation: Process eligible order cancellations directly through transactional service calls.
+
+Refund Processing: Initiate refund requests (routed through Human-in-the-Loop governance for high-value thresholds).
+
+Support Escalation: Provide customer support contact details (helpline, email, live-agent queue) when resolution fails.
+
+Catalog & Cart Guidance: Help search for products and modify active Redis carts conversationally.
+
+2. RAG & Vector Search Architecture (/rag)
+Chunking (chunker.service.ts): Tokenize internal policy runbooks, FAQs, and support docs into overlapping chunks (e.g., 512 tokens with 50-token overlap).
+
+Embedding Generation (embedding.service.ts): Batch vector generation using text-embedding-3-small (1536 dimensions).
+
+Vector Store & Retrieval (vector-store.ts): Execute hybrid retrieval over PostgreSQL using pgvector HNSW index combined with pg_trgm/tsvector full-text search.
+
+Metadata Filtering (metadata-filter.ts): Scope retrieval by user role (USER, ADMIN, MANAGER) and tenant parameters to prevent cross-tenant or unauthorized policy data leakage.
+
+3. Agent Tooling & Guardrails (/tools)
+Tool Registry (registry.ts): Centralized registry declaring tool definitions, description schemas for the LLM, and execution handlers.
+
+Input & Output Guardrails (guardrails.ts):
+
+Input Validation: Enforce strict Zod schema parsing before any tool runs.
+
+Role-based Access Control (RBAC): Restrict protected tools (e.g., issue-refund) based on the caller's JWT role.
+
+Output Sanitization: Redact sensitive PII (credit cards, full auth tokens, hashed secrets) from tool returns before injecting them into the LLM context.
+
+Tool Implementations:
+
+search-catalog.tool: Invokes hybrid search over Product catalog.
+
+manage-cart.tool: Calls CartService to read or modify Redis cart state.
+
+get-order-status.tool: Reads order tracking data from OrderService.
+
+query-runbooks.tool: RAG query tool for company policy and return runbooks.
+
+issue-refund.tool: Executes refund processing via PaymentService.
+
+4. Human-in-the-Loop (HITL) Workflow (/hitl)
+For high-impact or administrative operations (e.g., refunds exceeding $50 or manual order cancellations):
+
+Pause Action: The tool handler pauses agent execution and stores state in PostgreSQL (hitl_approvals table) with status PENDING.
+
+Publish Kafka Event: Emit a HITL_APPROVAL_REQUESTED event to Kafka topic ai.hitl.events containing approvalId, userId, actionType, amount, and context.
+
+Streaming Response: Notify the client via SSE that the action has been paused awaiting manager approval.
+
+Resume via Callback: Upon admin approval (via webhook/endpoint), consume the HITL_APPROVAL_RESOLVED event, resume the agent.service.ts execution loop, execute the target tool, and stream final confirmation to the client.
+
+5. Streaming & Memory Layer (/orchestrator)
+Session Memory (memory.service.ts): Store rolling short-term chat window buffers in Redis (chat:history:<sessionId>) with a TTL.
+
+SSE Streaming (stream.service.ts): Pipe real-time LLM response tokens, tool-execution indicators ({ type: "tool_call", name: "get_order_status" }), and final responses back to the client using Server-Sent Events (POST /api/ai/chat/stream).
+
+6. Error Handling & Security
+Return standardized error frames over the SSE stream when tool executions fail or input guardrails detect policy violations.
+
+Prevent prompt injection by wrapping system instructions and enforcing output schemas on LLM generations."
