@@ -10,6 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:kafka": "tsx scripts/test-kafka.ts",
     "test:redis": "tsx scripts/test-redis.ts",
+    "test:seed": "tsx scripts/seed-embeddings.ts",
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
