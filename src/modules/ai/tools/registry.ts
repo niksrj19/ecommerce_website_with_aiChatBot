@@ -13,30 +13,20 @@ export const AGENT_TOOLS: Record<string, any> = {
   [issueRefundTool.name]: issueRefundTool,
 };
 
-// export const AGENT_TOOL_DEFINITIONS = Object.values(AGENT_TOOLS).map((tool) => ({
-//   type: "function" as const,
-//   function: {
-//     name: tool.name,
-//     description: tool.description,
-//     parameters: zodToJsonSchema(tool.schema, {
-//       target: "openAi", // Formats output specifically for OpenAI/Groq tool calls
-//     }),
-//   },
-// }));
-
-console.log("AGENT_TOOLS :::::",JSON.stringify(AGENT_TOOLS))
-
 export const AGENT_TOOL_DEFINITIONS = Object.values(AGENT_TOOLS).map((tool) => {
   // Use strategy: "none" to force inline definitions without $ref pointers
-
-  console.log(`Tool: ${tool.name}, Zod Schema:`, tool.schema);
-
   const jsonSchema = zodToJsonSchema(tool.schema, {
     $refStrategy: "none",
   }) as Record<string, any>;
 
   delete jsonSchema.$schema;
   delete jsonSchema.additionalProperties;
+
+  console.log(`tool.name: ${tool.name}, jsonSchema: ${JSON.stringify(jsonSchema)}`);
+  console.log(`tool.schema: jsonSchema.properties::`,jsonSchema.properties);
+  console.log(`tool.schema: jsonSchema.required::`,jsonSchema.required);
+
+  console.log(" I am here  1")
 
   return {
     type: "function" as const,
