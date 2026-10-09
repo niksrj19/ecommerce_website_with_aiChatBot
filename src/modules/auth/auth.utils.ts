@@ -12,7 +12,7 @@ export interface TokenPayload {
 
 export const generateTokens = (payload: TokenPayload) => {
   const accessToken = jwt.sign(payload, env.JWT_ACCESS_SECRET, {
-    expiresIn: "60m", // 60 minutes
+    expiresIn: "7d", // 60 minutes
   });
 
   const refreshToken = jwt.sign(payload, env.JWT_REFRESH_SECRET, {
@@ -37,7 +37,7 @@ export const ACCESS_COOKIE_OPTIONS: CookieOptions = {
   httpOnly: true,
   secure: isProduction,
   sameSite: "lax",
-  maxAge: 60 * 60 * 1000, // 1 hour
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   path: "/",
 };
 

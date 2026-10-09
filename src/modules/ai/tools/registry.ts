@@ -24,20 +24,30 @@ export const AGENT_TOOLS: Record<string, any> = {
 //   },
 // }));
 
+console.log("AGENT_TOOLS :::::",JSON.stringify(AGENT_TOOLS))
+
 export const AGENT_TOOL_DEFINITIONS = Object.values(AGENT_TOOLS).map((tool) => {
+  // Use strategy: "none" to force inline definitions without $ref pointers
+
+  console.log(`Tool: ${tool.name}, Zod Schema:`, tool.schema);
+
   const jsonSchema = zodToJsonSchema(tool.schema, {
-    target: "openAi",
+    $refStrategy: "none",
   }) as Record<string, any>;
 
-  // Remove $schema top-level tag as Groq/OpenAI APIs reject it
   delete jsonSchema.$schema;
+  delete jsonSchema.additionalProperties;
 
   return {
     type: "function" as const,
     function: {
       name: tool.name,
       description: tool.description,
-      parameters: jsonSchema,
+      parameters: {
+        type: "object",
+        properties: jsonSchema.properties || {},
+        required: jsonSchema.required || [],
+      },
     },
   };
 });

@@ -5,10 +5,8 @@ import { ToolGuardrails } from "../guardrails";
 export const getOrderStatusSchema = z.object({
   orderId: z
     .string()
-    .uuid("Order ID must be a valid UUID format")
     .optional()
-    .or(z.literal(""))
-    .describe("Optional specific order UUID to look up. Pass an empty string or omit to fetch recent orders."),
+    .describe("Optional specific order UUID to look up. Omit to fetch recent orders."),
 });
 
 export const getOrderStatusTool = {
@@ -21,13 +19,14 @@ export const getOrderStatusTool = {
     }
 
     const { orderId } = ToolGuardrails.validateInput(getOrderStatusSchema, args);
-
-    if (orderId) {
-      const order = await OrderService.getOrderById(orderId, context.userId);
+    const cleanOrderId = orderId?.trim();
+    console.log('Tools called with ORder Id ===', cleanOrderId);
+    if (cleanOrderId) {
+      const order = await OrderService.getOrderById(cleanOrderId, context.userId);
       return ToolGuardrails.sanitizeOutput(order);
     }
 
-    console.log("Order Id==", orderId);
+    console.log("Order Id==", cleanOrderId);
 
     const pastOrders = await OrderService.getUserOrders(context.userId, 1, 5);
     return ToolGuardrails.sanitizeOutput(pastOrders);
