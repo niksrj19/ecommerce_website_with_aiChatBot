@@ -6,6 +6,10 @@ export const createAddressSchema = z.object({
     .trim()
     .min(1, "firstName cannot be empty"),
   lastName: z.string().trim().optional(),
+  phoneNumber: z
+    .string({ message: "phoneNumber is required" })
+    .trim()
+    .min(7, "Valid phone number is required"),
   addressLine1: z
     .string({ message: "addressLine1 is required" })
     .trim()

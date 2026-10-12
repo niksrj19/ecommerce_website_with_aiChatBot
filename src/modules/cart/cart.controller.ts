@@ -95,7 +95,12 @@ export class CartController {
         return;
       }
 
-      const { sessionId } = mergeCartSchema.parse(req.body);
+      const guest_sessionId =
+      (req.headers["x-session-Id"] as string) || req.cookies?.sessionId;
+     console.log("req.cookies=====",req.cookies)
+      const { sessionId } = mergeCartSchema.parse({sessionId:guest_sessionId});
+
+      console.log("session ID ======",{guest_sessionId,sessionId})
       await CartMerger.mergeGuestCartToUserCart(sessionId, req.user.userId);
 
       const updatedCart = await CartService.getCart({ userId: req.user.userId });

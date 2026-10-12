@@ -3,6 +3,7 @@ export interface AddressResponse {
   userId: string;
   firstName: string;
   lastName: string | null;
+  phoneNumber: string;
   addressLine1: string;
   addressLine2: string | null;
   pincode: string;

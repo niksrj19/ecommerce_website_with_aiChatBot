@@ -5,6 +5,13 @@ import { CreateProductInput, GetProductsQuery , UpdateProductInput } from "./cat
 import { SemanticSearchStrategy } from "../search/strategies/semantic-search";
 
 export class CatalogService {
+  static async getProductById(id: string) {
+    return db.product.findUnique({
+      where: { id },
+      include: { images: true },
+    });
+  }
+
   static async getProducts(query: GetProductsQuery) {
     const { page, limit, size, color, category, brand, minPrice, maxPrice } = query;
 

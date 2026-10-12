@@ -42,6 +42,7 @@ export class AddressService {
           userId,
           firstName: input.firstName,
           lastName: input.lastName,
+          phoneNumber: input.phoneNumber,
           addressLine1: input.addressLine1,
           addressLine2: input.addressLine2,
           pincode: input.pincode,

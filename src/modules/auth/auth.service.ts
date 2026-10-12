@@ -41,23 +41,34 @@ export class AuthService {
       throw new Error("Unable to retrieve Google user profile");
     }
 
-    const { email, sub: googleId } = payload;
+    console.log("Payload ==", payload)
+
+    const { email, sub: googleId , email_verified , name , picture: avatar  } = payload;
 
     // 3. Upsert user in PostgreSQL
     const user = await db.user.upsert({
       where: { googleId },
-      update: { email },
+      update: { email, email_verified, name, avatar },
       create: {
         email,
         googleId,
+        email_verified: email_verified,
+        name: name ?? null,
+        avatar: avatar ?? null,
       },
     });
+
+    console.log("user ===",user)
 
     // 4. Generate access & refresh tokens
     const tokenPayload: TokenPayload = {
       userId: user.id,
       email: user.email,
       role: user.role,
+      name : user.name,
+      avatar : user.avatar,
+      email_verified: user.email_verified
+
     };
     const { accessToken, refreshToken } = generateTokens(tokenPayload);
 
@@ -111,6 +122,10 @@ export class AuthService {
       userId: user.id,
       email: user.email,
       role: user.role,
+      name : user.name,
+      avatar : user.avatar,
+      email_verified: user.email_verified
+
     };
     const tokens = generateTokens(tokenPayload);
 

@@ -6,6 +6,22 @@ import { createProductSchema, getProductsQuerySchema, productIdParamSchema, upda
 import { ZodError } from "zod";
 
 export class CatalogController {
+  static async getProductById(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = productIdParamSchema.parse(req.params);
+      const product = await CatalogService.getProductById(id);
+
+      if (!product) {
+        res.status(404).json({ error: "Product not found" });
+        return;
+      }
+
+      res.status(200).json(product);
+    } catch (error: any) {
+      CatalogController.handleErrors(error, res, "Failed to fetch product");
+    }
+  }
+
   static async getProducts(req: Request, res: Response): Promise<void> {
     try {
       // Validate and parse incoming query parameters
