@@ -9,7 +9,7 @@ import { FacetBuilder } from "./aggregations/facet.builder";
 import { db } from "../../core/database";
 
 export class SearchService {
-  private static CACHE_TTL_SECONDS = 600; // 10 minutes
+  private static CACHE_TTL_SECONDS = 30; // 10 minutes
 
   static async search(params: SearchQueryParams): Promise<SearchResponse> {
     const startTime = performance.now();
