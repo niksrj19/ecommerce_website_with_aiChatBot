@@ -6,6 +6,7 @@ import {
   orderIdParamSchema,
   orderPaginationSchema,
 } from "./order.schema";
+import { CartService } from "../cart/cart.service";
 
 export class OrderController {
   // POST /api/orders
@@ -22,15 +23,18 @@ export class OrderController {
         req.user.email,
         validatedBody
       );
+      // await CartService.clearCart({ userId :req.user.userId});
 
       res.status(201).json({
         message: "Order placed successfully",
         orderId: order.id,
         status: order.status,
         totalAmount: order.totalAmount,
+        shippingAddress: order.shippingAddress,
         createdAt: order.createdAt,
         items: order.items,
       });
+
     } catch (error: any) {
       OrderController.handleError(error, res, "Failed to place order");
     }

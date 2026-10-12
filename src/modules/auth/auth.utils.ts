@@ -8,6 +8,9 @@ export interface TokenPayload {
   userId: string;
   email: string;
   role: string;
+  name : string | null;
+  avatar : string | null;
+  email_verified : boolean;
 }
 
 export const generateTokens = (payload: TokenPayload) => {

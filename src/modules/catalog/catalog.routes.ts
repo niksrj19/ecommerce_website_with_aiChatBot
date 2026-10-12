@@ -7,6 +7,7 @@ import { authenticate } from "../../middlewares/authenticate";
 const router = Router();
 
 router.get("/products", CatalogController.getProducts);
+router.get("/product/:id", CatalogController.getProductById);
 
 // Admin Only: POST /api/products
 router.post(

@@ -20,11 +20,19 @@ export const createApp = (): Application => {
 
   // Standard enterprise middlewares
   app.use(helmet());
-  app.use(cors());
+ app.use(
+  cors({
+    origin: "http://localhost:4000",
+    credentials: true, // Required for HTTP-only refresh token cookies and session headers
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-guest-session-id","sessionid","x-session-id"],
+  })
+);
 
   // Add cookie parser middleware HERE
 app.use(cookieParser());
 app.use(express.json());
+
 app.use("/api/payments", paymentRoutes);
 
 // Global JSON parser for all subsequent routes

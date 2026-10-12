@@ -51,8 +51,7 @@ export const createProductSchema = z.object({
     .number({ message: "Price is required" })
     .positive("Price must be a positive number"),
   imageUrl: z
-    .string({ message: "Primary image URL is required" })
-    .url("Primary imageUrl must be a valid URL"),
+    .string({ message: "Primary image URL is required" }),
   sizes: z
     .array(z.string().trim().min(1))
     .nonempty("At least one size must be specified"),
@@ -63,7 +62,7 @@ export const createProductSchema = z.object({
   galleryImages: z
     .array(
       z.object({
-        url: z.string().url("Gallery image must be a valid URL"),
+        url: z.string(),
         altText: z.string().trim().optional(),
       })
     )
