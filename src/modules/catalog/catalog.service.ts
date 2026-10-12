@@ -135,19 +135,19 @@ export class CatalogService {
 
     // Generate and store embedding (or dispatch to Kafka in an event-driven setup)
   // WILL ENABLE LATER ON PRODUCTION 
-    // try {
-//   const textToEmbed = `${newProduct.title} ${newProduct.brand} ${newProduct.category} ${newProduct.description}`;
-//   const vector = await SemanticSearchStrategy.generateEmbedding(textToEmbed);
-//   const vectorString = `[${vector.join(",")}]`;
+    try {
+  const textToEmbed = `${newProduct.title} ${newProduct.brand} ${newProduct.category} ${newProduct.description}`;
+  const vector = await SemanticSearchStrategy.generateEmbedding(textToEmbed);
+  const vectorString = `[${vector.join(",")}]`;
 
-//   await db.$executeRawUnsafe(
-//     `UPDATE "products" SET embedding = $1::vector WHERE id = $2`,
-//     vectorString,
-//     newProduct.id
-//   );
-// } catch (error) {
-//   console.error("Failed to generate embedding at product creation:", error);
-// }
+  await db.$executeRawUnsafe(
+    `UPDATE "products" SET embedding = $1::vector WHERE id = $2`,
+    vectorString,
+    newProduct.id
+  );
+} catch (error) {
+  console.error("Failed to generate embedding at product creation:", error);
+}
 
     return newProduct;
   }
