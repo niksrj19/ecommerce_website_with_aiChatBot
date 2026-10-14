@@ -30,8 +30,6 @@ const envSchema = z.object({
   PAYMENT_KEY_ID: z.string().min(1),
   PAYMENT_KEY_SECRET: z.string().min(1),
   PAYMENT_WEBHOOK_SECRET: z.string().min(1),
-  KAFKA_BROKERS: z.string().default("localhost:9092"),
-  KAFKA_CLIENT_ID: z.string().default("aegis-commerce-backend"),
   GROQ_API_KEY: z.string().min(1),
   GROQ_MODEL: z.string().min(1)
 });

@@ -133,7 +133,7 @@ export class CatalogService {
       },
     });
 
-    // Generate and store embedding (or dispatch to Kafka in an event-driven setup)
+    // Generate and store embedding.
   // WILL ENABLE LATER ON PRODUCTION 
     try {
   const textToEmbed = `${newProduct.title} ${newProduct.brand} ${newProduct.category} ${newProduct.description}`;
