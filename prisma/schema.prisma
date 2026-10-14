@@ -161,7 +161,7 @@ model Address {
   phoneNumber         String   @map("phone_number")
   addressLine1        String   @map("address_line1")
   addressLine2        String?  @map("address_line2")
-  pincode             Stringp
+  pincode             String
   state               String
   country             String   @default("India")
   deliveryInstruction String?  @map("delivery_instruction")
