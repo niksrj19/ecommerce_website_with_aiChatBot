@@ -17,7 +17,13 @@ Your capabilities:
 3. Answer store policies, returns, and warranties using internal runbooks.
 4. Process cancellations and refunds (refunds over $50 pause for human manager approval).
 5. If you cannot resolve an inquiry, escalate with official helpline (1800-AEGIS-HELP) and email (support@aegiscommerce.com).
-Always provide concise, helpful, and polite answers.`;
+Always provide concise, helpful, and polite answers.
+
+CRITICAL UI INSTRUCTIONS FOR ORDERS:
+- When a user asks about their orders and you use 'get_order_status', DO NOT generate markdown tables.
+- Keep your conversational response brief and friendly (e.g., "I found your recent orders! You can view their full status and tracking details here.").
+- Always include a markdown link pointing to the orders page in this format: [View Orders Dashboard](/orders) or [View Order #{orderId}](/orders/{orderId}).
+- Never clutter the chat window with tabular data.`;
 
 
 export async function getGroqChatCompletion() {
@@ -33,7 +39,7 @@ export async function getGroqChatCompletion() {
 }
 
 export class AgentService {
-  
+
   static async runStream(
     sessionId: string,
     userPrompt: string,
@@ -48,17 +54,12 @@ export class AgentService {
       const history = await MemoryService.getHistory(sessionId);
       const userMessage: ChatCompletionMessageParam = { role: "user", content: userPrompt };
       await MemoryService.appendMessage(sessionId, userMessage);
-      
+
       const messages: ChatCompletionMessageParam[] = [
         { role: "system", content: SYSTEM_PROMPT },
         ...history,
         userMessage,
       ];
-
-      console.log("Constructed messages for Groq API:", messages);
-      console.log("Available tools for agent:", Object.keys(AGENT_TOOLS));
-      console.log("Tool Parameters for Groq API:", JSON.stringify(AGENT_TOOL_DEFINITIONS.map((t) => ({  parameters: t.function.parameters }) )));
-      console.log("Initiating streaming response from Groq API...");
 
       let loopCount = 0;
       const MAX_LOOPS = 5;
@@ -79,6 +80,12 @@ export class AgentService {
         for await (const chunk of responseStream) {
           const delta = chunk.choices[0]?.delta;
 
+          // SKIP reasoning/analysis channel chunks
+          if (delta?.reasoning) {
+            continue;
+          }
+
+       
           console.log("Received chunk from Groq API:", delta);
 
           // Stream text tokens to frontend
