@@ -1,6 +1,6 @@
 import { Queue } from "bullmq";
-import { redis } from "../../core/redis/client";
-import { OrderEmailJobPayload } from "./order.types";
+import { redis } from "../../core/redis/client.js";
+import { OrderEmailJobPayload } from "./order.types.js";
 
 export const ORDER_QUEUE_NAME = "order-processing";
 

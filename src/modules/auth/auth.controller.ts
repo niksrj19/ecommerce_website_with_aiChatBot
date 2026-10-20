@@ -1,8 +1,8 @@
 // src/modules/auth/auth.controller.ts
 import { Request, Response } from "express";
-import { AuthService } from "./auth.service";
-import { setAuthCookies, clearAuthCookies } from "./auth.utils";
-import { env } from "../../config/env";
+import { AuthService } from "./auth.service.js";
+import { setAuthCookies, clearAuthCookies } from "./auth.utils.js";
+import { env } from "../../config/env.js";
 
 export class AuthController {
   // GET /auth/google

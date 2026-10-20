@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { AIController } from "./ai.controller";
-import { optionalAuthenticate } from "../../middlewares/optional-auth";
-import { authenticate } from "../../middlewares/authenticate";
-import { authorize } from "../../middlewares/authorize";
+import { AIController } from "./ai.controller.js";
+import { optionalAuthenticate } from "../../middlewares/optional-auth.js";
+import { authenticate } from "../../middlewares/authenticate.js";
+import { authorize } from "../../middlewares/authorize.js";
 
 const router = Router();
 

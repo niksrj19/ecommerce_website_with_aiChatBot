@@ -14,6 +14,12 @@ enum Role {
   MANAGER
 }
 
+enum InquiryStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
 enum OrderStatus {
   PENDING
   CONFIRMED
@@ -215,4 +221,20 @@ model KnowledgeDocument {
   updatedAt   DateTime                    @updatedAt @map("updated_at")
 
   @@map("knowledge_documents")
+}
+
+model ContactInquiry {
+  id          String        @id @default(uuid())
+  name        String
+  email       String
+  topic       String
+  orderNumber String?       @map("order_number")
+  message     String        @db.Text
+  status      InquiryStatus @default(OPEN)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  @@index([email])
+  @@index([status])
+  @@map("contact_inquiries")
 }

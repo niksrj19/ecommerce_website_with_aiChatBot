@@ -1,4 +1,4 @@
-import { redis } from "../../../core/redis/client";
+import { redis } from "../../../core/redis/client.js";
 // import { ChatCompletionMessageParam } from "openai/resources/chat";
 import { ChatCompletionMessageParam } from "groq-sdk/resources/chat/index.js";
 

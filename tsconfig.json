@@ -1,6 +1,8 @@
 {
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "outDir": "./dist",         // Sends compiled JS, .d.ts, and .map files to a 'dist' folder
     "rootDir": "./src",
     "declaration": true,        // Keep if you need to build a library; otherwise set to false

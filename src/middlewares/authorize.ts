@@ -8,8 +8,6 @@ export const authorize = (allowedRoles: string[]) => {
       return;
     }
 
-    console.log('User role:', req.user.role);
-
     if (!allowedRoles.includes(req.user.role)) {
       res.status(403).json({
         error: "Forbidden: You do not have permission to perform this action",

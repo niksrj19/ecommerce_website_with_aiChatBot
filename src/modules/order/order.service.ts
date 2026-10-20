@@ -1,8 +1,8 @@
 import { Prisma } from "@prisma/client";
-import { db } from "../../core/database";
-import { CartStorage } from "../cart/cart.storage";
-import { CreateOrderInput } from "./order.schema";
-import { dispatchOrderCreatedJob } from "./order.queue";
+import { db } from "../../core/database/index.js";
+import { CartStorage } from "../cart/cart.storage.js";
+import { CreateOrderInput } from "./order.schema.js";
+import { dispatchOrderCreatedJob } from "./order.queue.js";
 
 export class OrderService {
   static async checkout(userId: string, userEmail: string, input: CreateOrderInput) {

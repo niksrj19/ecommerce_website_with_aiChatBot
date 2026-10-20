@@ -1,9 +1,9 @@
 import { Worker, Job } from "bullmq";
 import nodemailer from "nodemailer";
-import { env } from "../../config/env";
-import { redis } from "../../core/redis/client";
-import { ORDER_QUEUE_NAME } from "./order.queue";
-import { OrderEmailJobPayload } from "./order.types";
+import { env } from "../../config/env.js";
+import { redis } from "../../core/redis/client.js";
+import { ORDER_QUEUE_NAME } from "./order.queue.js";
+import { OrderEmailJobPayload } from "./order.types.js";
 
 // Mock or SMTP transporter
 const transporter = nodemailer.createTransport({
@@ -21,8 +21,7 @@ export const orderWorker = new Worker<OrderEmailJobPayload>(
   async (job: Job<OrderEmailJobPayload>) => {
     const { orderId, userEmail, totalAmount, items } = job.data;
 
-    console.log(`[Worker] Processing order confirmation email for Order #${orderId}`);
-
+  
     const itemListHtml = items
       .map(
         (i) =>
@@ -42,7 +41,7 @@ export const orderWorker = new Worker<OrderEmailJobPayload>(
       `,
     });
 
-    console.log(`[Worker] Successfully sent email to ${userEmail} for Order #${orderId}`);
+   
   },
   {
     connection: redis.duplicate({ maxRetriesPerRequest: null }),

@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { VectorStore } from "../../rag/vector-store";
-import { ToolGuardrails } from "../guardrails";
+import { VectorStore } from "../../rag/vector-store.js";
+import { ToolGuardrails } from "../guardrails.js";
 
 export const queryRunbooksSchema = z.object({
   question: z.string().describe("User policy question regarding returns, shipping, warranty, or escalations"),

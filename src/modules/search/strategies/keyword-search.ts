@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
-import { db } from "../../../core/database";
-import { SearchHit } from "../search.types";
-import { SearchQueryParams } from "../search.schema";
+import { db } from "../../../core/database/index.js";
+import { SearchHit } from "../search.types.js";
+import { SearchQueryParams } from "../search.schema.js";
 
 export class KeywordSearchStrategy {
   static async execute(query: SearchQueryParams, limit: number = 50): Promise<SearchHit[]> {

@@ -1,9 +1,9 @@
 // import OpenAI from "openai";
 import { GoogleGenAI } from '@google/genai';
-import { db } from "../../../core/database";
-import { env } from "../../../config/env";
-import { SearchHit } from "../search.types";
-import { SearchQueryParams } from "../search.schema";
+import { db } from "../../../core/database/index.js";
+import { env } from "../../../config/env.js";
+import { SearchHit } from "../search.types.js";
+import { SearchQueryParams } from "../search.schema.js";
 
 const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
 
@@ -42,8 +42,6 @@ export class SemanticSearchStrategy {
 
     const vector = await this.generateEmbedding(query.q);
     const vectorString = `[${vector.join(",")}]`;
-
-    // console.log("Generated embedding vector:", vectorString);
 
     const rawRows = await db.$queryRaw<any[]>`
       SELECT 

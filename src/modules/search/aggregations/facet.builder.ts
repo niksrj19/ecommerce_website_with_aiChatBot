@@ -1,5 +1,5 @@
-import { db } from "../../../core/database";
-import { FacetResult } from "../search.types";
+import { db } from "../../../core/database/index.js";
+import { FacetResult } from "../search.types.js";
 
 export class FacetBuilder {
   static async build(matchingProductIds: string[]): Promise<FacetResult> {

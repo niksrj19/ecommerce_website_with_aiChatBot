@@ -1,10 +1,10 @@
 import crypto from "crypto";
 import Razorpay from "razorpay";
-import { db } from "../../core/database";
-import { env } from "../../config/env";
-import { CreateIntentInput, VerifyPaymentInput } from "./payment.schema";
-import { RazorpayCreateOrderResult } from "./payment.types";
-import { dispatchOrderCreatedJob } from "../order/order.queue";
+import { db } from "../../core/database/index.js";
+import { env } from "../../config/env.js";
+import { CreateIntentInput, VerifyPaymentInput } from "./payment.schema.js";
+import { RazorpayCreateOrderResult } from "./payment.types.js";
+import { dispatchOrderCreatedJob } from "../order/order.queue.js";
 
 const razorpay = new Razorpay({
   key_id: env.PAYMENT_KEY_ID,
@@ -20,14 +20,14 @@ export class PaymentService {
     input: CreateIntentInput
   ): Promise<RazorpayCreateOrderResult> {
 
-    console.log("Creating payment intent for user:", userId, "with input:", input);
+  
     // 1. Fetch order and verify ownership & status
     const order = await db.order.findFirst({
       where: { id: input.orderId, userId },
       include: { items: true },
     });
 
-    console.log("Fetched order:", order);
+   
     if (!order) {
       const error: any = new Error("Order not found or unauthorized");
       error.statusCode = 404;

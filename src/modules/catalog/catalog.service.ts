@@ -1,8 +1,8 @@
 // src/modules/catalog/catalog.service.ts
 import { Prisma } from "@prisma/client";
-import { db } from "../../core/database";
-import { CreateProductInput, GetProductsQuery , UpdateProductInput } from "./catalog.schema";
-import { SemanticSearchStrategy } from "../search/strategies/semantic-search";
+import { db } from "../../core/database/index.js";
+import { CreateProductInput, GetProductsQuery , UpdateProductInput } from "./catalog.schema.js";
+import { SemanticSearchStrategy } from "../search/strategies/semantic-search.js";
 
 export class CatalogService {
   static async getProductById(id: string) {
@@ -82,7 +82,7 @@ export class CatalogService {
         orderBy: { createdAt: "desc" },
       }),
     ]);
-
+  // console.log("products=", JSON.stringify(products))
     const totalPages = Math.ceil(totalItems / limit);
 
     return {

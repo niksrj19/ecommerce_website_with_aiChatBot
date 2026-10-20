@@ -2,7 +2,7 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { CookieOptions, Response } from "express";
-import { env } from "../../config/env";
+import { env } from "../../config/env.js";
 
 export interface TokenPayload {
   userId: string;
@@ -38,16 +38,20 @@ const isProduction = env.NODE_ENV === "production";
 
 export const ACCESS_COOKIE_OPTIONS: CookieOptions = {
   httpOnly: true,
-  secure: isProduction,
-  sameSite: "lax",
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  // secure : false,
+  // sameSite: "lax",
+  secure: true,
+  sameSite: "none",
+  domain: ".basesole.online",
+  maxAge: 15 * 60 * 1000, // 15 min
   path: "/",
 };
 
 export const REFRESH_COOKIE_OPTIONS: CookieOptions = {
   httpOnly: true,
-  secure: isProduction,
-  sameSite: "lax",
+  secure: true,
+  sameSite: 'none',
+  domain: ".basesole.online",
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   path: "/",
 };

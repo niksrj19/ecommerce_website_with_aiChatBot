@@ -1,6 +1,6 @@
 // src/middlewares/rate-limit.ts
 import { Request, Response, NextFunction } from "express";
-import { SlidingWindowRateLimiter } from "../core/redis/rate-limiter";
+import { SlidingWindowRateLimiter } from "../core/redis/rate-limiter.js";
 
 export const rateLimit = (limit: number = 60, windowInSeconds: number = 60) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {

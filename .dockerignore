@@ -1,0 +1,10 @@
+.git
+.env
+.env.*
+!.env.example
+node_modules
+dist
+DB backup
+Files related to project
+docker
+npm-debug.log*

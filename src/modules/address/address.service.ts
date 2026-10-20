@@ -1,5 +1,5 @@
-import { db } from "../../core/database";
-import { CreateAddressInput } from "./address.schema";
+import { db } from "../../core/database/index.js";
+import { CreateAddressInput } from "./address.schema.js";
 
 export class AddressService {
   /**

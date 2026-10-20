@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
 import { ZodError } from "zod";
-import { PaymentService } from "./payment.service";
-import { createIntentSchema, verifyPaymentSchema } from "./payment.schema";
+import { PaymentService } from "./payment.service.js";
+import { createIntentSchema, verifyPaymentSchema } from "./payment.schema.js";
 
 export class PaymentController {
   // POST /api/payments/create-intent (Auth)
   static async createIntent(req: Request, res: Response): Promise<void> {
     try {
-        console.log("Received request to create payment intent with body:", req.body);
+       
       if (!req.user?.userId) {
         res.status(401).json({ error: "User not loggedIn" });
         return;

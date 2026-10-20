@@ -1,7 +1,7 @@
-import { KeywordSearchStrategy } from "./keyword-search";
-import { SemanticSearchStrategy } from "./semantic-search";
-import { SearchQueryParams } from "../search.schema";
-import { SearchHit } from "../search.types";
+import { KeywordSearchStrategy } from "./keyword-search.js";
+import { SemanticSearchStrategy } from "./semantic-search.js";
+import { SearchQueryParams } from "../search.schema.js";
+import { SearchHit } from "../search.types.js";
 
 export class HybridSearchStrategy {
   static async execute(query: SearchQueryParams, candidateLimit: number = 60): Promise<{
@@ -15,8 +15,7 @@ export class HybridSearchStrategy {
 
     debugger; // 👈 Debugging breakpoint to inspect keywordHits and semanticHits
 
-    console.log("Keyword Hits:", keywordHits);
-    console.log("Semantic Hits:", semanticHits);
+   
     return { keywordHits, semanticHits };
   }
 }
