@@ -1,7 +1,7 @@
 // src/modules/contact/contact.service.ts
-import { db } from "../../core/database";
-import { ContactInquiryInput } from "./contact.schema";
-import { ContactMailer } from "./contact.mailer";
+import { db } from "../../core/database/index.js";
+import { ContactInquiryInput } from "./contact.schema.js";
+import { ContactMailer } from "./contact.mailer.js";
 
 export class ContactService {
   static async processInquiry(data: ContactInquiryInput) {

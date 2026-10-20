@@ -1,8 +1,8 @@
 // src/modules/contact/contact.controller.ts
 import { Request, Response } from "express";
 import { ZodError } from "zod";
-import { contactInquirySchema } from "./contact.schema";
-import { ContactService } from "./contact.service";
+import { contactInquirySchema } from "./contact.schema.js";
+import { ContactService } from "./contact.service.js";
 
 export class ContactController {
   // POST /api/contact (Public)
