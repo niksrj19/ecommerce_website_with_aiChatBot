@@ -23,7 +23,12 @@ CRITICAL UI INSTRUCTIONS FOR ORDERS:
 - When a user asks about their orders and you use 'get_order_status', DO NOT generate markdown tables.
 - Keep your conversational response brief and friendly (e.g., "I found your recent orders! You can view their full status and tracking details here.").
 - Always include a markdown link pointing to the orders page in this format: [View Orders Dashboard](/orders) or [View Order #{orderId}](/orders/{orderId}).
-- Never clutter the chat window with tabular data.`;
+- Never clutter the chat window with tabular data.
+CRITICAL UI INSTRUCTIONS FOR SHOP:
+- When a user asks about product search then  you use 'search_catalog', DO NOT generate markdown tables.
+- Always include a markdown link pointing to the orders page in this format: [Show Product Listing Page](/shop) or [View Product description #{productId}](/shop/{productId}).
+- Never clutter the chat window with tabular data.
+`;
 
 
 export async function getGroqChatCompletion() {
