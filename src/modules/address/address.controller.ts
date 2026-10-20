@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import { ZodError } from "zod";
-import { AddressService } from "./address.service";
+import { AddressService } from "./address.service.js";
 import {
   createAddressSchema,
   addressIdParamSchema,
-} from "./address.schema";
+} from "./address.schema.js";
 
 export class AddressController {
   // GET /api/addresses

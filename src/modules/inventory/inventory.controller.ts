@@ -1,8 +1,8 @@
 // src/modules/inventory/inventory.controller.ts
 import { Request, Response } from "express";
 import { ZodError } from "zod";
-import { InventoryService } from "./inventory.service";
-import { createInventorySchema, updateInventorySchema } from "./inventory.schema";
+import { InventoryService } from "./inventory.service.js";
+import { createInventorySchema, updateInventorySchema } from "./inventory.schema.js";
 
 export class InventoryController {
   private static getParamValue(value: string | string[] | undefined): string {

@@ -1,11 +1,11 @@
 // import OpenAI from "openai";
 import Groq from "groq-sdk";
 import { Response } from "express";
-import { AGENT_TOOLS, AGENT_TOOL_DEFINITIONS } from "../tools/registry";
-import { MemoryService } from "./memory.service";
-import { StreamService } from "./stream.service";
+import { AGENT_TOOLS, AGENT_TOOL_DEFINITIONS } from "../tools/registry.js";
+import { MemoryService } from "./memory.service.js";
+import { StreamService } from "./stream.service.js";
 // import { ChatCompletionMessageParam } from "openai/resources/chat";
-import { env } from "../../../config/env";
+import { env } from "../../../config/env.js";
 import { ChatCompletionMessageParam } from "groq-sdk/resources/chat/index.js";
 
 const groqAi = new Groq({ apiKey: env.GROQ_API_KEY });
@@ -47,9 +47,6 @@ export class AgentService {
     res: Response
   ): Promise<void> {
     StreamService.initSSE(res);
-
-    console.log("Starting agent loop with context:", { sessionId, userPrompt, context });
-
     try {
       const history = await MemoryService.getHistory(sessionId);
       const userMessage: ChatCompletionMessageParam = { role: "user", content: userPrompt };
@@ -86,8 +83,6 @@ export class AgentService {
           }
 
        
-          console.log("Received chunk from Groq API:", delta);
-
           // Stream text tokens to frontend
           if (delta?.content) {
             accumulatedContent += delta.content;

@@ -1,8 +1,8 @@
 // src/middlewares/authenticate.ts
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { env } from "../config/env";
-import { TokenPayload } from "../modules/auth/auth.utils";
+import { env } from "../config/env.js";
+import { TokenPayload } from "../modules/auth/auth.utils.js";
 
 declare global {
   namespace Express {

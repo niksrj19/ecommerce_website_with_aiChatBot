@@ -1,8 +1,8 @@
 // src/modules/inventory/inventory.routes.ts
 import { Router } from "express";
-import { InventoryController } from "./inventory.controller";
-import { authenticate } from "../../middlewares/authenticate";
-import { authorize } from "../../middlewares/authorize";
+import { InventoryController } from "./inventory.controller.js";
+import { authenticate } from "../../middlewares/authenticate.js";
+import { authorize } from "../../middlewares/authorize.js";
 
 const router = Router();
 

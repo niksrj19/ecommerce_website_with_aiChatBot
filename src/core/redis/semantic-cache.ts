@@ -1,6 +1,6 @@
 // src/core/redis/semantic-cache.ts
-import { redis } from "./client";
-import { SemanticSearchStrategy } from "../../modules/search/strategies/semantic-search";
+import { redis } from "./client.js";
+import { SemanticSearchStrategy } from "../../modules/search/strategies/semantic-search.js";
 
 interface CachedSemanticEntry {
   prompt: string;

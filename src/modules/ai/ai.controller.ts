@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { AgentService } from "./orchestrator/agent.service";
-import { HitlService } from "./hitl/hitl.service";
+import { AgentService } from "./orchestrator/agent.service.js";
+import { HitlService } from "./hitl/hitl.service.js";
 import { z } from "zod";
 
 const chatStreamSchema = z.object({
@@ -14,8 +14,7 @@ export class AIController {
     try {
       const { prompt, sessionId } = chatStreamSchema.parse(req.body);
 
-      console.log("Received chat stream request:", { prompt, sessionId, userId: req.user?.userId });
-
+    
       await AgentService.runStream(
         sessionId,
         prompt,

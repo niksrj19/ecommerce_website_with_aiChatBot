@@ -1,6 +1,6 @@
 // src/modules/cart/cart.storage.ts
 import { redis } from "../../core/redis/client.js";
-import { CartItemStored } from "./cart.types";
+import { CartItemStored } from "./cart.types.js";
 
 export class CartStorage {
   private static AUTH_CART_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days for authenticated users
@@ -22,6 +22,7 @@ export class CartStorage {
 
   static async getCartRaw(key: string): Promise<Record<string, CartItemStored>> {
     const rawData = await redis.hgetall(key);
+    // console.log("CartService.addItem step=3-1 getCartRaw start rawData=",JSON.stringify({key,rawData}))
     const items: Record<string, CartItemStored> = {};
 
     for (const [variantKey, jsonString] of Object.entries(rawData)) {
@@ -31,7 +32,8 @@ export class CartStorage {
         // Skip malformed entries
       }
     }
-
+// console.log("CartService.addItem step=3-2 getCartRaw start rawData=",JSON.stringify({items}))
+    
     return items;
   }
 
@@ -39,7 +41,7 @@ export class CartStorage {
     const variantKey = this.getVariantKey(item.productId, item.size, item.color);
     const isGuest = key.startsWith("cart:guest:");
     const ttl = isGuest ? this.GUEST_CART_TTL_SECONDS : this.AUTH_CART_TTL_SECONDS;
-
+    // console.log("setItem for HsrtKey =",isGuest)
     await redis
       .multi()
       .hset(key, variantKey, JSON.stringify(item))

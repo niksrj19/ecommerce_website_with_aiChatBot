@@ -1,6 +1,6 @@
-import { db } from "../../../core/database";
-import { EmbeddingService } from "./embedding.service";
-import { MetadataFilter } from "./metadata-filter";
+import { db } from "../../../core/database/index.js";
+import { EmbeddingService } from "./embedding.service.js";
+import { MetadataFilter } from "./metadata-filter.js";
 
 export interface RetrievedChunk {
   id: string;

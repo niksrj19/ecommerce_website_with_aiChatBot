@@ -30,7 +30,6 @@
     "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^10.0.16",
-    "openai": "^7.30.0",
     "razorpay": "^2.9.8",
     "zod": "^4.6.5",
     "zod-to-json-schema": "^3.25.2"

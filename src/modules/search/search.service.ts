@@ -1,12 +1,12 @@
 import crypto from "crypto";
-import { redis } from "../../core/redis/client";
-import { SearchQueryParams } from "./search.schema";
-import { SearchResponse, SearchHit } from "./search.types";
-import { HybridSearchStrategy } from "./strategies/hybrid-search";
-import { RRFRanker } from "./ranking/rrf.ranker";
-import { BusinessBooster } from "./ranking/booster";
-import { FacetBuilder } from "./aggregations/facet.builder";
-import { db } from "../../core/database";
+import { redis } from "../../core/redis/client.js";
+import { SearchQueryParams } from "./search.schema.js";
+import { SearchResponse, SearchHit } from "./search.types.js";
+import { HybridSearchStrategy } from "./strategies/hybrid-search.js";
+import { RRFRanker } from "./ranking/rrf.ranker.js";
+import { BusinessBooster } from "./ranking/booster.js";
+import { FacetBuilder } from "./aggregations/facet.builder.js";
+import { db } from "../../core/database/index.js";
 
 export class SearchService {
   private static CACHE_TTL_SECONDS = 30; // 10 minutes

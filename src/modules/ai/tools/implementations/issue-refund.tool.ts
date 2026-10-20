@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { HitlService } from "../../hitl/hitl.service";
-import { ToolGuardrails } from "../guardrails";
+import { HitlService } from "../../hitl/hitl.service.js";
+import { ToolGuardrails } from "../guardrails.js";
 
 export const issueRefundSchema = z.object({
   orderId: z.string().uuid(),

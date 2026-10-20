@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { CartService } from "../../../cart/cart.service";
-import { ToolGuardrails } from "../guardrails";
+import { CartService } from "../../../cart/cart.service.js";
+import { ToolGuardrails } from "../guardrails.js";
 
 export const manageCartSchema = z.object({
   action: z.enum(["get", "add", "remove"]),

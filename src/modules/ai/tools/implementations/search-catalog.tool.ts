@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { SearchService } from "../../../search/search.service";
-import { ToolGuardrails } from "../guardrails";
+import { SearchService } from "../../../search/search.service.js";
+import { ToolGuardrails } from "../guardrails.js";
 
 export const searchCatalogSchema = z.object({
   query: z.string().describe("Search query for products"),

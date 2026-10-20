@@ -1,42 +1,51 @@
-// src/core/redis/client.ts
-import Redis, { RedisOptions } from "ioredis";
-import { env } from "../../config/env";
 
-const options: RedisOptions = {
-  host: env.REDIS_HOST || "127.0.0.1",
-  port: Number(env.REDIS_PORT) || 6379,
-  password: env.REDIS_PASSWORD || "",
-  db: Number(env.REDIS_DB) || 0,
-  lazyConnect: false,
-  maxRetriesPerRequest: 3,
-  retryStrategy(times) {
-    const delay = Math.min(times * 100, 3000);
-    return delay;
+import Redis, { type ClusterOptions } from "ioredis";
+import { env } from "../../config/env.js";
+
+const redisHost = env.REDIS_HOST || "127.0.0.1";
+const redisPort = Number(env.REDIS_PORT) || 6379;
+const redisPassword = env.REDIS_PASSWORD || undefined;
+
+const clusterOptions: ClusterOptions = {
+  clusterRetryStrategy(times) {
+    return Math.min(times * 100, 3000);
   },
-  reconnectOnError(err) {
-    const targetError = "READONLY";
-    if (err.message.includes(targetError)) {
-      return true; // Reconnect if cluster node switches to read-only
-    }
-    return false;
+
+  redisOptions: {
+    password: redisPassword,
+    connectTimeout: 10000,
+    commandTimeout: 10000,
+    maxRetriesPerRequest: 3,
+
+    // Enable TLS for the AWS ElastiCache endpoint.
+    // Prefer certificate verification in production.
+    tls: {
+      rejectUnauthorized: false,
+    },
   },
+
+  // Do not silently queue commands while disconnected.
+  enableOfflineQueue: false,
 };
 
-
-console.log("Redis connection options:", options);
-
-const redis = new Redis(options);
+export const redis = new Redis.Cluster(
+  [
+    {
+      host: redisHost,
+      port: redisPort,
+    },
+  ],
+  clusterOptions,
+);
 
 redis.on("connect", () => {
-  console.log(" Connected to Redis successfully");
+  console.log("Connected to Redis Cluster");
 });
 
 redis.on("error", (err) => {
-  console.error("❌ Redis Connection Error:", err.message);
+  console.error("Redis Cluster error:", err.message);
 });
 
 redis.on("close", () => {
-  console.warn("⚠️  Redis connection closed");
+  console.warn("Redis Cluster connection closed");
 });
-
-export { redis };

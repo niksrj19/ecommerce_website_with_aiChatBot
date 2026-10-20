@@ -1,9 +1,9 @@
 import crypto from "crypto";
 import { Request, Response } from "express";
-import { env } from "../../config/env";
-import { db } from "../../core/database";
-import { PaymentService } from "./payment.service";
-import { RazorpayWebhookPayload } from "./payment.types";
+import { env } from "../../config/env.js";
+import { db } from "../../core/database/index.js";
+import { PaymentService } from "./payment.service.js";
+import { RazorpayWebhookPayload } from "./payment.types.js";
 
 export class PaymentWebhookHandler {
   /**

@@ -1,4 +1,4 @@
-import { db } from "../../../core/database";
+import { db } from "../../../core/database/index.js";
 import { Prisma } from "@prisma/client";
 
 export class HitlService {

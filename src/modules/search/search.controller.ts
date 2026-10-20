@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { SearchService } from "./search.service";
-import { searchRequestSchema } from "./search.schema";
+import { SearchService } from "./search.service.js";
+import { searchRequestSchema } from "./search.schema.js";
 import { ZodError } from "zod";
 
 export class SearchController {

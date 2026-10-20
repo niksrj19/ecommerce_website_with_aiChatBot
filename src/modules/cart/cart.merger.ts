@@ -1,8 +1,8 @@
 // src/modules/cart/cart.merger.ts
 import { redis } from "../../core/redis/client.js";
-import { db } from "../../core/database";
-import { CartStorage } from "./cart.storage";
-import { CartItemStored } from "./cart.types";
+import { db } from "../../core/database/index.js";
+import { CartStorage } from "./cart.storage.js";
+import { CartItemStored } from "./cart.types.js";
 
 export class CartMerger {
   static async mergeGuestCartToUserCart(sessionId: string, userId: string): Promise<void> {

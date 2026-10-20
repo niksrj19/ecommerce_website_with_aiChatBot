@@ -1,7 +1,7 @@
 // src/modules/inventory/inventory.service.ts
 import { Prisma } from "@prisma/client";
-import { db } from "../../core/database";
-import { CreateInventoryInput, UpdateInventoryInput } from "./inventory.schema";
+import { db } from "../../core/database/index.js";
+import { CreateInventoryInput, UpdateInventoryInput } from "./inventory.schema.js";
 
 export class InventoryService {
   static async createInventory(input: CreateInventoryInput) {

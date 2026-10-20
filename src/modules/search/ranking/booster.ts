@@ -1,4 +1,4 @@
-import { SearchHit } from "../search.types";
+import { SearchHit } from "../search.types.js";
 
 export class BusinessBooster {
   static apply(hits: SearchHit[]): SearchHit[] {

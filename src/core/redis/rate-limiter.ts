@@ -1,5 +1,5 @@
 // src/core/redis/rate-limiter.ts
-import { redis } from "./client";
+import { redis } from "./client.js";
 
 export interface RateLimitOptions {
   keyPrefix: string;

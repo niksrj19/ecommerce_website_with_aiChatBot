@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
 import { ZodError } from "zod";
-import { OrderService } from "./order.service";
+import { OrderService } from "./order.service.js";
 import {
   createOrderSchema,
   orderIdParamSchema,
   orderPaginationSchema,
-} from "./order.schema";
-import { CartService } from "../cart/cart.service";
+} from "./order.schema.js";
+import { CartService } from "../cart/cart.service.js";
 
 export class OrderController {
   // POST /api/orders

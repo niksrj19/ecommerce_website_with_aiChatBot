@@ -1,8 +1,8 @@
 // src/modules/cart/cart.routes.ts
 import { Router } from "express";
-import { CartController } from "./cart.controller";
-import { authenticate } from "../../middlewares/authenticate";
-import { optionalAuthenticate } from "../../middlewares/optional-auth";
+import { CartController } from "./cart.controller.js";
+import { authenticate } from "../../middlewares/authenticate.js";
+import { optionalAuthenticate } from "../../middlewares/optional-auth.js";
 
 const router = Router();
 

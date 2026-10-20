@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { OrderService } from "../../../order/order.service";
-import { ToolGuardrails } from "../guardrails";
+import { OrderService } from "../../../order/order.service.js";
+import { ToolGuardrails } from "../guardrails.js";
 
 export const getOrderStatusSchema = z.object({
   orderId: z
@@ -20,13 +20,12 @@ export const getOrderStatusTool = {
 
     const { orderId } = ToolGuardrails.validateInput(getOrderStatusSchema, args);
     const cleanOrderId = orderId?.trim();
-    console.log('Tools called with ORder Id ===', cleanOrderId);
+ 
     if (cleanOrderId) {
       const order = await OrderService.getOrderById(cleanOrderId, context.userId);
       return ToolGuardrails.sanitizeOutput(order);
     }
 
-    console.log("Order Id==", cleanOrderId);
 
     const pastOrders = await OrderService.getUserOrders(context.userId, 1, 5);
     return ToolGuardrails.sanitizeOutput(pastOrders);

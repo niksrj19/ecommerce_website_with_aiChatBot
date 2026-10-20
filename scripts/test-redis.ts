@@ -4,9 +4,9 @@ import { SlidingWindowRateLimiter } from "../src/core/redis/rate-limiter";
 import { SemanticCache } from "../src/core/redis/semantic-cache";
 
 async function runTest() {
-  console.log("1. Testing Ping...");
+
   const pong = await redis.ping();
-  console.log("Redis Ping Response:", pong);
+ 
 
   console.log("\n2. Testing Sliding Window Rate Limiter...");
   const res1 = await SlidingWindowRateLimiter.check("test-user", {
@@ -14,21 +14,21 @@ async function runTest() {
     limit: 2,
     windowInSeconds: 10,
   });
-  console.log("Check 1:", res1);
+ 
 
   const res2 = await SlidingWindowRateLimiter.check("test-user", {
     keyPrefix: "api",
     limit: 2,
     windowInSeconds: 10,
   });
-  console.log("Check 2:", res2);
+
 
   const res3 = await SlidingWindowRateLimiter.check("test-user", {
     keyPrefix: "api",
     limit: 2,
     windowInSeconds: 10,
   });
-  console.log("Check 3 (Should be rate-limited):", res3);
+
 
   console.log("\n3. Testing Semantic Cache...");
   await SemanticCache.set(

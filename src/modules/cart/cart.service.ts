@@ -1,12 +1,12 @@
 // src/modules/cart/cart.service.ts
-import { db } from "../../core/database";
-import { CartStorage } from "./cart.storage";
+import { db } from "../../core/database/index.js";
+import { CartStorage } from "./cart.storage.js";
 import {
   AddCartItemInput,
   UpdateCartItemInput,
   RemoveCartItemInput,
-} from "./cart.schema";
-import { CartResponse, EnrichedCartItem } from "./cart.types";
+} from "./cart.schema.js";
+import { CartResponse, EnrichedCartItem } from "./cart.types.js";
 
 export class CartService {
   static async getCart(target: { userId?: string; sessionId?: string }): Promise<CartResponse> {
@@ -103,19 +103,23 @@ export class CartService {
   ): Promise<CartResponse> {
     const { productId, size, color, quantity } = input;
     const cartKey = CartStorage.buildCartKey(target);
-
+    //  console.log("CartService.addItem step=1 productLookup start");
     // 1. Verify Product exists
     const product = await db.product.findUnique({
       where: { id: productId },
       select: { id: true, inStock: true },
     });
 
+    //  console.log("CartService.addItem step=1 done", { found: !!product });
+
+
     if (!product || !product.inStock) {
       const error: any = new Error("Product is out of stock or does not exist");
       error.statusCode = 404;
       throw error;
     }
-
+// console.log("CartService.addItem step=2 inventoryLookup start");
+  
     // 2. Verify Variant Stock in inventory table
     const inventory = await db.inventory.findFirst({
       where: {
@@ -124,9 +128,13 @@ export class CartService {
         color: { equals: color, mode: "insensitive" },
       },
     });
-
+    // console.log("CartService.addItem step=2 done");
+    // console.log("CartService.addItem step=3 getCartRaw start");
     const rawItems = await CartStorage.getCartRaw(cartKey);
+    // console.log("CartService.addItem step=3 done");
+    // console.log("CartService.addItem step=4 variantKey start");
     const variantKey = CartStorage.getVariantKey(productId, size, color);
+    // console.log("CartService.addItem step=4 variantKey done");
     const existingQuantity = rawItems[variantKey]?.quantity || 0;
     const requestedTotal = existingQuantity + quantity;
 
@@ -140,7 +148,12 @@ export class CartService {
         throw error;
       }
     }
-
+console.log("CartService.addItem step=5 CartStorage.setItem start", JSON.stringify( {cartKey,
+      productId,
+      size,
+      color,
+      quantity: requestedTotal,
+    }));
     // 3. Persist to Redis
     await CartStorage.setItem(cartKey, {
       productId,

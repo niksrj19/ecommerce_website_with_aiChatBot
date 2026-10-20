@@ -1,14 +1,14 @@
 // src/modules/auth/auth.service.ts
 import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
-import { db } from "../../core/database";
-import { env } from "../../config/env";
+import { db } from "../../core/database/index.js"
+import { env } from "../../config/env.js";
 import {
   generateTokens,
   hashToken,
   verifyHash,
   TokenPayload,
-} from "./auth.utils";
+} from "./auth.utils.js";
 
 const googleClient = new OAuth2Client(
   env.GOOGLE_CLIENT_ID,
@@ -41,24 +41,21 @@ export class AuthService {
       throw new Error("Unable to retrieve Google user profile");
     }
 
-    console.log("Payload ==", payload)
-
     const { email, sub: googleId , email_verified , name , picture: avatar  } = payload;
+    const emailVerified = email_verified ?? false;
 
     // 3. Upsert user in PostgreSQL
     const user = await db.user.upsert({
       where: { googleId },
-      update: { email, email_verified, name, avatar },
+      update: { email, email_verified: emailVerified, name, avatar },
       create: {
         email,
         googleId,
-        email_verified: email_verified,
+        email_verified: emailVerified,
         name: name ?? null,
         avatar: avatar ?? null,
       },
     });
-
-    console.log("user ===",user)
 
     // 4. Generate access & refresh tokens
     const tokenPayload: TokenPayload = {
@@ -67,7 +64,7 @@ export class AuthService {
       role: user.role,
       name : user.name,
       avatar : user.avatar,
-      email_verified: user.email_verified
+      email_verified: user.email_verified ?? false
 
     };
     const { accessToken, refreshToken } = generateTokens(tokenPayload);
@@ -124,7 +121,7 @@ export class AuthService {
       role: user.role,
       name : user.name,
       avatar : user.avatar,
-      email_verified: user.email_verified
+      email_verified: user.email_verified ?? false
 
     };
     const tokens = generateTokens(tokenPayload);

@@ -1,8 +1,8 @@
 // src/modules/catalog/catalog.controller.ts
 import { Request, Response } from "express";
 import {Prisma} from "@prisma/client";
-import { CatalogService } from "./catalog.service";
-import { createProductSchema, getProductsQuerySchema, productIdParamSchema, updateProductSchema } from "./catalog.schema";
+import { CatalogService } from "./catalog.service.js";
+import { createProductSchema, getProductsQuerySchema, productIdParamSchema, updateProductSchema } from "./catalog.schema.js";
 import { ZodError } from "zod";
 
 export class CatalogController {
