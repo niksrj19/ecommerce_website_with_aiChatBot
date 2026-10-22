@@ -1,33 +1,12 @@
 
-import Redis from "ioredis";
 import { Worker, Job } from "bullmq";
 import nodemailer from "nodemailer";
 import { env } from "../../config/env.js";
+import { createRedisConnection } from "../../core/redis/client.js";
 import { ORDER_QUEUE_NAME } from "./order.queue.js";
 import { OrderEmailJobPayload } from "./order.types.js";
 
-const workerRedis = new Redis.Cluster(
-  [
-    {
-      host: env.REDIS_HOST || "127.0.0.1",
-      port: Number(env.REDIS_PORT) || 6379,
-    },
-  ],
-  {
-    redisOptions: {
-      password: env.REDIS_PASSWORD || undefined,
-      connectTimeout: 10000,
-      commandTimeout: 10000,
-      maxRetriesPerRequest: null,
-      tls: {
-        rejectUnauthorized: false,
-      },
-    },
-    clusterRetryStrategy(times) {
-      return Math.min(times * 100, 3000);
-    },
-  },
-);
+const workerRedis = createRedisConnection({ maxRetriesPerRequest: null });
 
 const transporter = nodemailer.createTransport({
   host: env.SMTP_HOST || "smtp.gmail.com",

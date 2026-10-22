@@ -22,6 +22,7 @@ const envSchema = z.object({
   REDIS_PASSWORD : z.string().optional(),
   REDIS_DB :  z.coerce.number().default(0),
   REDIS_TLS: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
+  REDIS_CLUSTER: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
   SMTP_HOST: z.string().min(1),
   SMTP_PORT: z.coerce.number().default(465),
   SMTP_SECURE: z.coerce.boolean().default(false),
