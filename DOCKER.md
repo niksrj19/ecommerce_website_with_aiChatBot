@@ -10,7 +10,7 @@ docker compose up --build
 
 Compose starts the API, PostgreSQL with pgvector, and Redis. The API applies Prisma migrations at startup, including the migration that enables the `vector` extension. PostgreSQL and Redis data are stored in named volumes and survive container restarts and replacement. `docker compose down -v` removes the volumes and permanently deletes their data.
 
-The API image uses Alpine, installs OpenSSL for Prisma's musl-based Linux engines, and grants the runtime user write access to Prisma's engine directory. The app service's `env_file` passes `.env` into the container; `--env-file .env` supplies values for Compose-file interpolation. Rebuild and recreate the API after changing application code or the Dockerfile with `docker compose --env-file .env up -d --build --force-recreate app`.
+The API image uses Alpine, installs OpenSSL for Prisma's musl-based Linux engines, and grants the runtime user write access to Prisma's engine directory. The app service's `env_file` passes `.env` into the container; `--env-file .env` supplies values for Compose-file interpolation. The local Redis service is standalone and does not use TLS, so Compose configures `REDIS_CLUSTER=false` and `REDIS_TLS=false`. Rebuild and recreate the API after changing application code or the Dockerfile with `docker compose --env-file .env up -d --build --force-recreate app`.
 
 The Compose database credentials are only for local development. Do not deploy that database configuration to AWS.
 
@@ -30,7 +30,7 @@ Required by the app unless a default is shown in parentheses:
 - `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`, `CLIENT_URL` (http://localhost:3000)
 - `OPENAI_API_KEY`, `GEMINI_API_KEY`, `GEMINI_API_MODEL` (`gemini-embedding-001`)
-- `REDIS_HOST` (127.0.0.1), `REDIS_PORT` (6379), `REDIS_PASSWORD` (optional), `REDIS_DB` (0), `REDIS_TLS` (`false`; set to `true` for TLS-enabled Redis endpoints)
+- `REDIS_HOST` (127.0.0.1), `REDIS_PORT` (6379), `REDIS_PASSWORD` (optional), `REDIS_DB` (0), `REDIS_TLS` (`false`; set to `true` for TLS-enabled Redis endpoints), `REDIS_CLUSTER` (`false`; set to `true` only when connecting to a Redis Cluster)
 - `SMTP_HOST`, `SMTP_PORT` (465), `SMTP_SECURE` (false), `SMTP_USER`, `SMTP_PASS`
 - `PAYMENT_GATEWAY` (`RAZORPAY`), `PAYMENT_KEY_ID`, `PAYMENT_KEY_SECRET`, `PAYMENT_WEBHOOK_SECRET`
 - `GROQ_API_KEY`, `GROQ_MODEL`

@@ -9,6 +9,8 @@ services:
       DATABASE_URL: postgresql://postgres:localdevpassword@postgres:5432/ecommerce?schema=public
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      REDIS_TLS: "false"
+      REDIS_CLUSTER: "false"
     ports:
       - "3000:3000"
     depends_on:
