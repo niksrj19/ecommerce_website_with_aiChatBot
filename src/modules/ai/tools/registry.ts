@@ -1,5 +1,6 @@
 import { searchCatalogTool } from "./implementations/search-catalog.tool.js";
 import { manageCartTool } from "./implementations/manage-cart.tool.js";
+import { clearCartTool } from "./implementations/clear-cart.tool.js";
 import { getOrderStatusTool } from "./implementations/get-order-status.tool.js";
 import { queryRunbooksTool } from "./implementations/query-runbooks.tool.js";
 import { issueRefundTool } from "./implementations/issue-refund.tool.js";
@@ -8,6 +9,7 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 export const AGENT_TOOLS: Record<string, any> = {
   [searchCatalogTool.name]: searchCatalogTool,
   [manageCartTool.name]: manageCartTool,
+  [clearCartTool.name]: clearCartTool,
   [getOrderStatusTool.name]: getOrderStatusTool,
   [queryRunbooksTool.name]: queryRunbooksTool,
   [issueRefundTool.name]: issueRefundTool,

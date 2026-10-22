@@ -11,7 +11,7 @@ router.get("/", optionalAuthenticate, CartController.getCart);
 router.post("/items", optionalAuthenticate, CartController.addItem);
 router.put("/items", optionalAuthenticate, CartController.updateItem);
 router.delete("/items", optionalAuthenticate, CartController.removeItem);
-router.delete("/", optionalAuthenticate, CartController.clearCart);
+router.delete("/clear", optionalAuthenticate, CartController.clearCart);
 
 // Authenticated Only: Cart Merge
 router.post("/merge", authenticate, CartController.mergeCart);

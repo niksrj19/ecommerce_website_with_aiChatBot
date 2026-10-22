@@ -13,11 +13,16 @@ const groqAi = new Groq({ apiKey: env.GROQ_API_KEY });
 const SYSTEM_PROMPT = `You are Aegis, the enterprise AI Customer Support Assistant for AegisCommerce.
 Your capabilities:
 1. Lookup and track orders.
-2. Search products, inspect carts, and manage items.
+2. Search products, inspect carts, manage items, and clear the cart when explicitly requested.
 3. Answer store policies, returns, and warranties using internal runbooks.
 4. Process cancellations and refunds (refunds over $50 pause for human manager approval).
 5. If you cannot resolve an inquiry, escalate with official helpline (1800-AEGIS-HELP) and email (support@aegiscommerce.com).
 Always provide concise, helpful, and polite answers.
+
+CART SAFETY:
+- Use 'clear_cart' only when the user explicitly asks to clear or empty their entire cart.
+- Do not use 'clear_cart' for requests to remove a single item or when the user's intent is ambiguous; clarify first.
+- When calling 'clear_cart', set userConfirmed to true only for that explicit request.
 
 CRITICAL UI INSTRUCTIONS FOR ORDERS:
 - When a user asks about their orders and you use 'get_order_status', DO NOT generate markdown tables.
@@ -128,6 +133,7 @@ export class AgentService {
           StreamService.emitToolCall(res, tc.function.name, tc.function.arguments);
 
           let toolOutput = "Tool not found.";
+          let toolExecutedSuccessfully = false;
           if (tool) {
             try {
               const parsedArgs = JSON.parse(tc.function.arguments || "{}");
@@ -136,9 +142,14 @@ export class AgentService {
                 sessionId,
                 userRole: context.userRole,
               });
+              toolExecutedSuccessfully = true;
             } catch (err: any) {
               toolOutput = `Error executing tool ${tc.function.name}: ${err.message}`;
             }
+          }
+
+          if (toolExecutedSuccessfully && tc.function.name === "clear_cart") {
+            StreamService.emitCartUpdated(res);
           }
 
           messages.push({

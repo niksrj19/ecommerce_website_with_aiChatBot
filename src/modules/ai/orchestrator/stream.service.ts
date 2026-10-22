@@ -20,6 +20,10 @@ export class StreamService {
     this.emit(res, "tool_call", { name: toolName, args });
   }
 
+  static emitCartUpdated(res: Response): void {
+    this.emit(res, "cart_updated", { action: "cleared" });
+  }
+
   static emitEnd(res: Response): void {
     this.emit(res, "done", {});
     res.end();
