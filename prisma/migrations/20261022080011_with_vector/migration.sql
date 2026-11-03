@@ -6,3 +6,6 @@ DROP INDEX "idx_products_search_vector";
 
 -- DropIndex
 DROP INDEX "idx_products_title_trgm";
+
+-- AlterTable
+ALTER TABLE "products" ALTER COLUMN "search_vector" DROP DEFAULT;

@@ -42,7 +42,7 @@ export const ACCESS_COOKIE_OPTIONS: CookieOptions = {
   // sameSite: "lax",
   secure: true,
   sameSite: "none",
-  domain: ".basesole.online",
+  // domain: ".basesole.online",
   maxAge: 15 * 60 * 1000, // 15 min
   path: "/",
 };
@@ -51,7 +51,7 @@ export const REFRESH_COOKIE_OPTIONS: CookieOptions = {
   httpOnly: true,
   secure: true,
   sameSite: 'none',
-  domain: ".basesole.online",
+  // domain: ".basesole.online",
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   path: "/",
 };

@@ -1,9 +1,50 @@
 // src/modules/inventory/inventory.service.ts
 import { Prisma } from "@prisma/client";
 import { db } from "../../core/database/index.js";
+import { CatalogCache } from "../../core/redis/catalog-cache.js";
 import { CreateInventoryInput, UpdateInventoryInput } from "./inventory.schema.js";
 
 export class InventoryService {
+  static async getProductAvailability(productId: string) {
+    const product = await db.product.findUnique({
+      where: { id: productId },
+      select: {
+        id: true,
+        variants: {
+          where: { isActive: true },
+          select: {
+            id: true,
+            sku: true,
+            size: true,
+            color: true,
+            inventory: {
+              select: { quantityInStock: true, reserved: true, updatedAt: true },
+            },
+          },
+          orderBy: { sku: "asc" },
+        },
+      },
+    });
+    if (!product) {
+      const error: any = new Error("Product not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    return {
+      productId: product.id,
+      variants: product.variants.map(({ inventory, ...variant }) => ({
+        ...variant,
+        inventory: inventory
+          ? {
+              availableQuantity: Math.max(0, inventory.quantityInStock - inventory.reserved),
+              updatedAt: inventory.updatedAt,
+            }
+          : { availableQuantity: 0, updatedAt: null },
+      })),
+    };
+  }
+
   static async createInventory(input: CreateInventoryInput) {
     // 1. Verify referenced product exists
     const product = await db.product.findUnique({
@@ -17,19 +58,43 @@ export class InventoryService {
       throw error;
     }
 
+    if (input.variantId) {
+      const variant = await db.productVariant.findFirst({
+        where: { id: input.variantId, productId: input.productId },
+        select: { id: true },
+      });
+      if (!variant) {
+        const error: any = new Error("Variant not found for the specified product");
+        error.statusCode = 404;
+        throw error;
+      }
+    }
+
     // 2. Insert inventory record
-    return db.inventory.create({
-      data: {
-        productId: input.productId,
-        categorySku: input.categorySku,
-        color: input.color,
-        size: input.size,
-        quantityInStock: input.quantityInStock,
-        unitPrice: new Prisma.Decimal(input.unitPrice),
-        reserved: input.reserved,
-        storeId: input.storeId,
-      },
+    const inventory = await db.$transaction(async (tx) => {
+      const created = await tx.inventory.create({
+        data: {
+          productId: input.productId,
+          variantId: input.variantId,
+          categorySku: input.categorySku,
+          color: input.color,
+          size: input.size,
+          quantityInStock: input.quantityInStock,
+          unitPrice: new Prisma.Decimal(input.unitPrice),
+          reserved: input.reserved,
+          storeId: input.storeId,
+        },
+      });
+      if (input.variantId) {
+        await tx.productVariant.update({
+          where: { id: input.variantId },
+          data: { price: new Prisma.Decimal(input.unitPrice) },
+        });
+      }
+      return created;
     });
+    if (input.variantId) await CatalogCache.invalidate();
+    return inventory;
   }
 
   static async updateInventory(id: string, input: UpdateInventoryInput) {
@@ -83,10 +148,21 @@ export class InventoryService {
     if (input.size !== undefined) updateData.size = input.size;
     if (input.storeId !== undefined) updateData.storeId = input.storeId;
 
-    return db.inventory.update({
-      where: { id },
-      data: updateData,
+    const updated = await db.$transaction(async (tx) => {
+      const inventory = await tx.inventory.update({
+        where: { id },
+        data: updateData,
+      });
+      if (input.unitPrice !== undefined && existing.variantId) {
+        await tx.productVariant.update({
+          where: { id: existing.variantId },
+          data: { price: new Prisma.Decimal(input.unitPrice) },
+        });
+      }
+      return inventory;
     });
+    if (input.unitPrice !== undefined && existing.variantId) await CatalogCache.invalidate();
+    return updated;
   }
 
   static async getInventoryByProduct(productId: string) {

@@ -9,6 +9,21 @@ export class InventoryController {
     return Array.isArray(value) ? value[0] : value || "";
   }
 
+  static async getProductAvailability(req: Request, res: Response): Promise<void> {
+    try {
+      const productId = InventoryController.getParamValue(req.params.productId);
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(productId)) {
+        res.status(400).json({ error: "Invalid product ID format" });
+        return;
+      }
+      const availability = await InventoryService.getProductAvailability(productId);
+      res.setHeader("Cache-Control", "no-store");
+      res.status(200).json(availability);
+    } catch (error: any) {
+      res.status(error.statusCode || 500).json({ error: error.message || "Failed to fetch inventory availability" });
+    }
+  }
+
   // POST /api/inventory (Admin only)
   static async createInventory(req: Request, res: Response): Promise<void> {
     try {

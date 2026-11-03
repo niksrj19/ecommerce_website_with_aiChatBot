@@ -6,6 +6,8 @@ import { authorize } from "../../middlewares/authorize.js";
 
 const router = Router();
 
+router.get("/product/:productId/availability", InventoryController.getProductAvailability);
+
 // Protected modification endpoints (Admin only)
 router.post(
   "/",

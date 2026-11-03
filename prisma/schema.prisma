@@ -56,9 +56,15 @@ model User {
 model Product {
   id            String                      @id @default(uuid())
   title         String
+  slug          String                      @unique
   description   String                      @db.Text
   brand         String
+  brandId       String                      @map("brand_id")
+  brandRef      Brand                       @relation(fields: [brandId], references: [id], onDelete: Restrict)
   category      String
+  categoryId    String                      @map("category_id")
+  categoryRef   Category                    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  specs         Json                        @default("{}")
   price         Decimal                     @db.Decimal(10, 2)
   imageUrl      String                      @map("image_url")
   sizes         String[]
@@ -71,9 +77,13 @@ model Product {
   images        ProductImage[]
   orderItems    OrderItem[]    // Relation to OrderItem
   inventory     Inventory[]
+  variants      ProductVariant[]
+  reviewStats   ProductReviewStats?
   createdAt     DateTime                    @default(now()) @map("created_at")
   updatedAt     DateTime                    @updatedAt @map("updated_at")
 
+  @@index([brandId])
+  @@index([categoryId])
   @@index([category])
   @@index([brand])
   @@index([price])
@@ -95,6 +105,8 @@ model Inventory {
   id              String   @id @default(uuid())
   productId       String   @map("product_id")
   product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId       String?  @unique @map("variant_id")
+  variant         ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
   categorySku     String   @map("category_sku")
   color           String?
   size            String?
@@ -109,6 +121,68 @@ model Inventory {
   @@index([productId])
   @@index([storeId])
   @@map("inventory")
+}
+
+model Brand {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?   @db.Text
+  logoUrl     String?   @map("logo_url")
+  isActive    Boolean   @default(true) @map("is_active")
+  products    Product[]
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([isActive, name])
+  @@map("brands")
+}
+
+model Category {
+  id          String      @id @default(uuid())
+  name        String
+  slug        String      @unique
+  description String?     @db.Text
+  parentId    String?     @map("parent_id")
+  parent      Category?   @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[]  @relation("CategoryTree")
+  products    Product[]
+  isActive    Boolean     @default(true) @map("is_active")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  @@index([parentId])
+  @@index([isActive, name])
+  @@map("categories")
+}
+
+model ProductVariant {
+  id          String    @id @default(uuid())
+  productId   String    @map("product_id")
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku         String    @unique
+  price       Decimal   @db.Decimal(10, 2)
+  size        String?
+  color       String?
+  attributes  Json      @default("{}")
+  isActive    Boolean   @default(true) @map("is_active")
+  inventory   Inventory?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([productId, isActive])
+  @@map("product_variants")
+}
+
+model ProductReviewStats {
+  id             String   @id @default(uuid())
+  productId      String   @unique @map("product_id")
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  averageRating  Decimal  @default(0) @map("average_rating") @db.Decimal(3, 2)
+  reviewCount    Int      @default(0) @map("review_count")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("product_review_stats")
 }
 
 

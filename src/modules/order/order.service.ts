@@ -25,6 +25,7 @@ export class OrderService {
         Array<{
           id: string;
           product_id: string;
+          variant_id: string | null;
           size: string | null;
           color: string | null;
           quantity_in_stock: number;
@@ -32,7 +33,7 @@ export class OrderService {
           unit_price: string;
         }>
       >`
-        SELECT id, product_id, size, color, quantity_in_stock, reserved, unit_price
+        SELECT id, product_id, variant_id, size, color, quantity_in_stock, reserved, unit_price
         FROM "inventory"
         WHERE product_id = ANY(${productIds})
         FOR UPDATE;
@@ -44,6 +45,16 @@ export class OrderService {
         select: { id: true, title: true, price: true, inStock: true },
       });
       const productMap = new Map(products.map((p) => [p.id, p]));
+      const variantIds = inventories.flatMap((inventory) =>
+        inventory.variant_id ? [inventory.variant_id] : []
+      );
+      const variants = variantIds.length
+        ? await tx.productVariant.findMany({
+            where: { id: { in: variantIds } },
+            select: { id: true, price: true },
+          })
+        : [];
+      const variantMap = new Map(variants.map((variant) => [variant.id, variant]));
 
       let calculatedTotal = new Prisma.Decimal(0);
       const itemsToInsert: Array<{
@@ -85,7 +96,10 @@ export class OrderService {
           });
         }
 
-        const unitPrice = new Prisma.Decimal(product.price);
+        const unitPrice = new Prisma.Decimal(
+          (matchedInv?.variant_id ? variantMap.get(matchedInv.variant_id)?.price : undefined) ??
+            product.price
+        );
         const subtotal = unitPrice.mul(item.quantity);
         calculatedTotal = calculatedTotal.add(subtotal);
 

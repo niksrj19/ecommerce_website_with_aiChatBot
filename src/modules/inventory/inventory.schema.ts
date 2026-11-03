@@ -3,6 +3,7 @@ import { z } from "zod";
 
 export const createInventorySchema = z.object({
   productId: z.string().uuid("Invalid product ID format"),
+  variantId: z.string().uuid("Invalid variant ID format").optional(),
   categorySku: z.string().trim().min(1, "categorySku is required"),
   color: z.string().trim().optional(),
   size: z.string().trim().optional(),

@@ -27,6 +27,15 @@ export const getProductsQuerySchema = z.object({
 
 export type GetProductsQuery = z.infer<typeof getProductsQuerySchema>;
 
+export const lookupQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(50),
+  q: z.string().trim().min(1).optional(),
+  parentId: z.string().uuid().optional(),
+});
+
+export type LookupQuery = z.infer<typeof lookupQuerySchema>;
+
 
 
 // Create Product Schema
@@ -39,6 +48,8 @@ export const createProductSchema = z.object({
     .string({ message: "Description is required" })
     .trim()
     .min(10, "Description must be at least 10 characters long"),
+  slug: z.string().trim().min(1).optional(),
+  specs: z.record(z.string(), z.unknown()).optional(),
   brand: z
     .string({ message: "Brand is required" })
     .trim()
@@ -89,6 +100,14 @@ export const updateProductSchema = createProductSchema
     message: "At least one field must be provided to update the product",
   });
 
-  export type UpdateProductInput = z.infer<typeof updateProductSchema>;
-export type ProductIdParam = z.infer<typeof productIdParamSchema>;
+export const createProductVariantSchema = z.object({
+  sku: z.string().trim().min(1),
+  price: z.number().nonnegative(),
+  size: z.string().trim().optional(),
+  color: z.string().trim().optional(),
+  attributes: z.record(z.string(), z.unknown()).default({}),
+});
 
+export type CreateProductVariantInput = z.infer<typeof createProductVariantSchema>;
+export type UpdateProductInput = z.infer<typeof updateProductSchema>;
+export type ProductIdParam = z.infer<typeof productIdParamSchema>;

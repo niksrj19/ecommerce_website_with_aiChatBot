@@ -20,3 +20,6 @@ Endpoints:
 /auth/logout to clear cookies and invalidate the stored refresh token.
 
 Add middleware to authenticate incoming requests using the access token.
+
+
+npx prisma migrate dev --name init --create-only

@@ -21,13 +21,18 @@ export class CartService {
     const productIds = Array.from(new Set(Object.values(rawItems).map((i) => i.productId)));
 
     // Fetch live product and inventory records in parallel
-    const [products, inventoryRecords] = await Promise.all([
+    const [products, inventoryRecords, variants] = await Promise.all([
       db.product.findMany({
         where: { id: { in: productIds } },
         select: { id: true, title: true, brand: true, price: true, imageUrl: true, inStock: true },
       }),
       db.inventory.findMany({
         where: { productId: { in: productIds } },
+        include: { variant: { select: { price: true } } },
+      }),
+      db.productVariant.findMany({
+        where: { productId: { in: productIds }, isActive: true },
+        select: { productId: true, size: true, color: true, price: true },
       }),
     ]);
 
@@ -52,6 +57,12 @@ export class CartService {
           inv.size?.toLowerCase() === item.size.toLowerCase() &&
           inv.color?.toLowerCase() === item.color.toLowerCase()
       );
+      const matchedVariant = variants.find(
+        (variant) =>
+          variant.productId === item.productId &&
+          variant.size?.toLowerCase() === item.size.toLowerCase() &&
+          variant.color?.toLowerCase() === item.color.toLowerCase()
+      );
 
       const availableStock = matchedInventory
         ? Math.max(0, matchedInventory.quantityInStock - matchedInventory.reserved)
@@ -72,7 +83,7 @@ export class CartService {
         await CartStorage.setItem(cartKey, { ...item, quantity: effectiveQuantity });
       }
 
-      const unitPrice = Number(product.price);
+      const unitPrice = Number(matchedInventory?.variant?.price ?? matchedVariant?.price ?? product.price);
       enrichedItems.push({
         variantKey,
         productId: item.productId,

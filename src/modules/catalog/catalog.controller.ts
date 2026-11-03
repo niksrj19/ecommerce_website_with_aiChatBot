@@ -2,10 +2,111 @@
 import { Request, Response } from "express";
 import {Prisma} from "@prisma/client";
 import { CatalogService } from "./catalog.service.js";
-import { createProductSchema, getProductsQuerySchema, productIdParamSchema, updateProductSchema } from "./catalog.schema.js";
+import {
+  createProductSchema,
+  createProductVariantSchema,
+  getProductsQuerySchema,
+  lookupQuerySchema,
+  productIdParamSchema,
+  updateProductSchema,
+} from "./catalog.schema.js";
 import { ZodError } from "zod";
 
 export class CatalogController {
+  static async getBrands(req: Request, res: Response): Promise<void> {
+    try {
+      const query = lookupQuerySchema.parse(req.query);
+      const brands = await CatalogService.getBrands(query);
+      res.setHeader("Cache-Control", "public, max-age=0, s-maxage=900, stale-while-revalidate=60");
+      res.status(200).json(brands);
+    } catch (error) {
+      CatalogController.handleErrors(error, res, "Failed to fetch brands");
+    }
+  }
+
+  static async getCategories(req: Request, res: Response): Promise<void> {
+    try {
+      const query = lookupQuerySchema.parse(req.query);
+      const categories = await CatalogService.getCategories(query);
+      res.setHeader("Cache-Control", "public, max-age=0, s-maxage=900, stale-while-revalidate=60");
+      res.status(200).json(categories);
+    } catch (error) {
+      CatalogController.handleErrors(error, res, "Failed to fetch categories");
+    }
+  }
+
+  static async getBrandBySlug(req: Request, res: Response): Promise<void> {
+    try {
+      const slug = req.params.slug;
+      if (!slug || Array.isArray(slug)) {
+        res.status(400).json({ error: "Invalid brand slug" });
+        return;
+      }
+      const brand = await CatalogService.getBrandBySlug(slug);
+      if (!brand) {
+        res.status(404).json({ error: "Brand not found" });
+        return;
+      }
+      res.setHeader("Cache-Control", "public, max-age=0, s-maxage=900, stale-while-revalidate=60");
+      res.status(200).json(brand);
+    } catch (error) {
+      CatalogController.handleErrors(error, res, "Failed to fetch brand");
+    }
+  }
+
+  static async getCategoryBySlug(req: Request, res: Response): Promise<void> {
+    try {
+      const slug = req.params.slug;
+      if (!slug || Array.isArray(slug)) {
+        res.status(400).json({ error: "Invalid category slug" });
+        return;
+      }
+      const category = await CatalogService.getCategoryBySlug(slug);
+      if (!category) {
+        res.status(404).json({ error: "Category not found" });
+        return;
+      }
+      res.setHeader("Cache-Control", "public, max-age=0, s-maxage=900, stale-while-revalidate=60");
+      res.status(200).json(category);
+    } catch (error) {
+      CatalogController.handleErrors(error, res, "Failed to fetch category");
+    }
+  }
+
+  static async getProductReviewStats(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = productIdParamSchema.parse(req.params);
+      const stats = await CatalogService.getProductReviewStats(id);
+      if (!stats) {
+        res.status(404).json({ error: "Product review statistics not found" });
+        return;
+      }
+      res.setHeader("Cache-Control", "public, max-age=0, s-maxage=60, stale-while-revalidate=30");
+      res.status(200).json(stats);
+    } catch (error) {
+      CatalogController.handleErrors(error, res, "Failed to fetch product review statistics");
+    }
+  }
+
+  static async getProductBySlug(req: Request, res: Response): Promise<void> {
+    try {
+      const slug = req.params.slug;
+      if (!slug || Array.isArray(slug)) {
+        res.status(400).json({ error: "Invalid product slug" });
+        return;
+      }
+      const product = await CatalogService.getProductBySlug(slug);
+      if (!product) {
+        res.status(404).json({ error: "Product not found" });
+        return;
+      }
+      res.setHeader("Cache-Control", "public, max-age=0, s-maxage=5, stale-while-revalidate=5");
+      res.status(200).json(product);
+    } catch (error) {
+      CatalogController.handleErrors(error, res, "Failed to fetch product");
+    }
+  }
+
   static async getProductById(req: Request, res: Response): Promise<void> {
     try {
       const { id } = productIdParamSchema.parse(req.params);
@@ -29,6 +130,7 @@ export class CatalogController {
 
       const result = await CatalogService.getProducts(parsedQuery);
 
+      res.setHeader("Cache-Control", "public, max-age=0, s-maxage=30, stale-while-revalidate=15");
       res.status(200).json(result);
     } catch (error: any) {
       if (error.name === "ZodError") {
@@ -63,6 +165,17 @@ export class CatalogController {
 
       console.error("Failed to create product:", error);
       res.status(500).json({ error: "Internal server error while creating product" });
+    }
+  }
+
+  static async createProductVariant(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = productIdParamSchema.parse(req.params);
+      const data = createProductVariantSchema.parse(req.body);
+      const variant = await CatalogService.createProductVariant(id, data);
+      res.status(201).json(variant);
+    } catch (error) {
+      CatalogController.handleErrors(error, res, "Failed to create product variant");
     }
   }
 

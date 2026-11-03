@@ -7,6 +7,7 @@ import {
   orderPaginationSchema,
 } from "./order.schema.js";
 import { CartService } from "../cart/cart.service.js";
+import { PaymentStatus } from "@prisma/client";
 
 export class OrderController {
   // POST /api/orders
@@ -33,6 +34,7 @@ export class OrderController {
         shippingAddress: order.shippingAddress,
         createdAt: order.createdAt,
         items: order.items,
+        PaymentStatus: order.paymentStatus,
       });
 
     } catch (error: any) {
