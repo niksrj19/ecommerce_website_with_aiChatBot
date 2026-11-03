@@ -13,7 +13,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    // "postinstall": "prisma skills sync || exit 0"
+    "postinstall": "prisma skills sync || exit 0"
   },
   "dependencies": {
     "@google/genai": "^2.27.0",
