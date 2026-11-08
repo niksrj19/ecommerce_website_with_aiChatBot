@@ -15,7 +15,9 @@ export const manageCartTool = {
   description: "Inspect or modify the customer's shopping cart items",
   schema: manageCartSchema,
   execute: async (args: z.infer<typeof manageCartSchema>, context: { userId?: string; sessionId: string }) => {
-    const target = { userId: context.userId, sessionId: context.sessionId };
+    const target = context.userId
+      ? { userId: context.userId }
+      : { sessionId: context.sessionId };
     const validated = ToolGuardrails.validateInput(manageCartSchema, args);
 
     if (validated.action === "get") {

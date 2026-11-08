@@ -2,7 +2,7 @@
 import { Prisma } from "@prisma/client";
 import { createHash, randomUUID } from "node:crypto";
 import { db } from "../../core/database/index.js";
-import { CatalogCache } from "../../core/redis/catalog-cache.js";
+import { CatalogCache } from "../../core/cache/catalog-cache.js";
 import {
   CreateProductInput,
   CreateProductVariantInput,

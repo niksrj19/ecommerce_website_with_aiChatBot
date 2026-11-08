@@ -47,6 +47,7 @@ model User {
   role                Role     @default(USER)
   orders              Order[]  // User to Orders relation
   addresses           Address[] // One-to-Many relation to Address
+  carts               Cart[]
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")
 
@@ -311,4 +312,43 @@ model ContactInquiry {
   @@index([email])
   @@index([status])
   @@map("contact_inquiries")
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String?    @unique @map("user_id")
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId String?    @unique @map("session_id")
+  items     CartItem[]
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+
+  @@map("carts")
+}
+
+model CartItem {
+  id         String   @id @default(uuid())
+  cartId     String   @map("cart_id")
+  cart       Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variantKey String   @map("variant_key")
+  productId  String   @map("product_id")
+  size       String
+  color      String
+  quantity   Int
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@unique([cartId, variantKey])
+  @@index([productId])
+  @@map("cart_items")
+}
+
+model ChatMessage {
+  id        Int      @id @default(autoincrement())
+  sessionId String   @map("session_id")
+  message   Json
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([sessionId, id])
+  @@map("chat_messages")
 }

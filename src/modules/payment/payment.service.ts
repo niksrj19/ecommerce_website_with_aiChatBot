@@ -4,7 +4,7 @@ import { db } from "../../core/database/index.js";
 import { env } from "../../config/env.js";
 import { CreateIntentInput, VerifyPaymentInput } from "./payment.schema.js";
 import { RazorpayCreateOrderResult } from "./payment.types.js";
-import { dispatchOrderCreatedJob } from "../order/order.queue.js";
+import { sendOrderConfirmationEmail } from "../order/order-email.js";
 
 const razorpay = new Razorpay({
   key_id: env.PAYMENT_KEY_ID,
@@ -104,24 +104,24 @@ export class PaymentService {
   }
 
   /**
-   * Idempotent order state transition with BullMQ notification trigger
+   * Idempotent order state transition with an order confirmation email.
    */
   static async markOrderAsPaid(
     orderId: string,
     paymentId: string,
     paymentMethod: string
   ): Promise<boolean> {
-    return db.$transaction(async (tx) => {
+    const result = await db.$transaction(async (tx) => {
       const order = await tx.order.findUnique({
         where: { id: orderId },
         include: { user: true, items: true },
       });
 
-      if (!order) return false;
+      if (!order) return { status: "missing" as const };
 
       // Idempotency check: if already confirmed/paid, ignore
       if (order.paymentStatus === "PAID") {
-        return true;
+        return { status: "already-paid" as const };
       }
 
       await tx.order.update({
@@ -134,21 +134,29 @@ export class PaymentService {
         },
       });
 
-      // Dispatch asynchronous confirmation job to BullMQ
-      dispatchOrderCreatedJob({
-        orderId: order.id,
-        userEmail: order.user.email,
-        totalAmount: Number(order.totalAmount),
-        items: order.items.map((i) => ({
-          title: i.title,
-          size: i.size,
-          color: i.color,
-          quantity: i.quantity,
-          unitPrice: Number(i.unitPrice),
-        })),
-      }).catch((err) => console.error("[Payment] Failed to enqueue email job:", err));
-
-      return true;
+      return {
+        status: "paid" as const,
+        email: {
+          orderId: order.id,
+          userEmail: order.user.email,
+          totalAmount: Number(order.totalAmount),
+          items: order.items.map((i) => ({
+            title: i.title,
+            size: i.size,
+            color: i.color,
+            quantity: i.quantity,
+            unitPrice: Number(i.unitPrice),
+          })),
+        },
+      };
     });
+
+    if (result.status === "missing") return false;
+    if (result.status === "paid") {
+      sendOrderConfirmationEmail(result.email).catch((err) =>
+        console.error("[Payment] Failed to send order confirmation email:", err),
+      );
+    }
+    return true;
   }
 }

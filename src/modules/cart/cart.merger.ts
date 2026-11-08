@@ -1,17 +1,12 @@
-// src/modules/cart/cart.merger.ts
-import { redis } from "../../core/redis/client.js";
 import { db } from "../../core/database/index.js";
 import { CartStorage } from "./cart.storage.js";
-import { CartItemStored } from "./cart.types.js";
+import type { CartItemStored } from "./cart.types.js";
 
 export class CartMerger {
   static async mergeGuestCartToUserCart(sessionId: string, userId: string): Promise<void> {
-    const guestKey = CartStorage.buildCartKey({ sessionId });
-    const userKey = CartStorage.buildCartKey({ userId });
-
     const [guestItems, userItems] = await Promise.all([
-      CartStorage.getCartRaw(guestKey),
-      CartStorage.getCartRaw(userKey),
+      CartStorage.getCartRaw({ sessionId }),
+      CartStorage.getCartRaw({ userId }),
     ]);
 
     const variantKeys = Array.from(new Set([...Object.keys(guestItems), ...Object.keys(userItems)]));
@@ -58,14 +53,25 @@ export class CartMerger {
       }
     }
 
-    // Persist to user cart and clean up guest cart atomically
-    const pipeline = redis.multi();
-    for (const [vKey, item] of Object.entries(mergedItems)) {
-      pipeline.hset(userKey, vKey, JSON.stringify(item));
-    }
-    pipeline.expire(userKey, 30 * 24 * 60 * 60); // 30-day TTL
-    pipeline.del(guestKey);
+    await db.$transaction(async (tx) => {
+      if (Object.keys(mergedItems).length > 0) {
+        const userCart = await tx.cart.upsert({
+          where: { userId },
+          create: { userId },
+          update: {},
+        });
 
-    await pipeline.exec();
+        for (const [variantKey, item] of Object.entries(mergedItems)) {
+          await tx.cartItem.upsert({
+            where: { cartId_variantKey: { cartId: userCart.id, variantKey } },
+            create: { cartId: userCart.id, variantKey, ...item },
+            update: item,
+          });
+        }
+      }
+
+      const guestCart = await tx.cart.findUnique({ where: { sessionId } });
+      if (guestCart) await tx.cart.delete({ where: { id: guestCart.id } });
+    });
   }
 }

@@ -9,6 +9,7 @@ import { env } from "../../../config/env.js";
 import { ChatCompletionMessageParam } from "groq-sdk/resources/chat/index.js";
 
 const groqAi = new Groq({ apiKey: env.GROQ_API_KEY });
+const frontendUrl = env.CLIENT_URL.replace(/\/+$/, "");
 
 const SYSTEM_PROMPT = `You are Aegis, the enterprise AI Customer Support Assistant for AegisCommerce.
 Your capabilities:
@@ -27,7 +28,7 @@ CART SAFETY:
 CRITICAL UI INSTRUCTIONS FOR ORDERS:
 - When a user asks about their orders and you use 'get_order_status', DO NOT generate markdown tables.
 - Keep your conversational response brief and friendly (e.g., "I found your recent orders! You can view their full status and tracking details here.").
-- Always include a markdown link pointing to the orders page in this format: [View Orders Dashboard](/orders) or [View Order #{orderId}](/orders/{orderId}).
+- Always include an absolute markdown link on the frontend domain ${frontendUrl}: [View Orders Dashboard](${frontendUrl}/orders) or [View Order](${frontendUrl}/orders/{actualOrderId}). Use the actual order ID returned by the tool in the URL, without braces.
 - Never clutter the chat window with tabular data.
 CRITICAL UI INSTRUCTIONS FOR SHOP:
 - When a user asks about product search then  you use 'search_catalog', DO NOT generate markdown tables.

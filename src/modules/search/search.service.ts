@@ -1,5 +1,3 @@
-import crypto from "crypto";
-import { redis } from "../../core/redis/client.js";
 import { SearchQueryParams } from "./search.schema.js";
 import { SearchResponse, SearchHit } from "./search.types.js";
 import { HybridSearchStrategy } from "./strategies/hybrid-search.js";
@@ -9,32 +7,12 @@ import { FacetBuilder } from "./aggregations/facet.builder.js";
 import { db } from "../../core/database/index.js";
 
 export class SearchService {
-  private static CACHE_TTL_SECONDS = 30; // 10 minutes
-
   static async search(params: SearchQueryParams): Promise<SearchResponse> {
     const startTime = performance.now();
 
-    // 1. Generate Deterministic Cache Key
-    const hash = crypto
-      .createHash("sha256")
-      .update(JSON.stringify(params))
-      .digest("hex");
-    const cacheKey = `search:${hash}`;
-
-    // 2. Intercept Cache Hit
-    const cachedData = await redis.get(cacheKey);
-    if (cachedData) {
-      const response: SearchResponse = JSON.parse(cachedData);
-      response.performance = {
-        tookMs: Math.round(performance.now() - startTime),
-        cached: true,
-      };
-      return response;
-    }
-
     let candidateHits: SearchHit[] = [];
 
-    // 3. Execution Pipeline: Hybrid Search or Database Query
+    // Execute hybrid search or fall back to a standard database query.
     if (params.q) {
       const { keywordHits, semanticHits } = await HybridSearchStrategy.execute(params, 80);
       const fusedHits = RRFRanker.rank(keywordHits, semanticHits);
@@ -59,7 +37,7 @@ export class SearchService {
       }));
     }
 
-    // 4. Apply Filters (Brand, Category, Price, Stock)
+    // Apply filters (brand, category, price, and stock).
     let filtered = candidateHits.filter((item) => {
       if (params.brand && params.brand.length > 0) {
         if (!params.brand.map((b) => b.toLowerCase()).includes(item.brand.toLowerCase())) return false;
@@ -73,15 +51,15 @@ export class SearchService {
       return true;
     });
 
-    // 5. Apply Sorting
+    // Apply sorting.
     if (params.sortBy === "price_asc") filtered.sort((a, b) => a.price - b.price);
     else if (params.sortBy === "price_desc") filtered.sort((a, b) => b.price - a.price);
 
-    // 6. Build Facets for all matching results
+    // Build facets for all matching results.
     const matchingIds = filtered.map((h) => h.id);
     const facets = await FacetBuilder.build(matchingIds);
 
-    // 7. Paginate Slices
+    // Paginate the matching results.
     const totalItems = filtered.length;
     const totalPages = Math.ceil(totalItems / params.limit);
     const offset = (params.page - 1) * params.limit;
@@ -101,9 +79,6 @@ export class SearchService {
         cached: false,
       },
     };
-
-    // 8. Cache response asynchronously
-    await redis.set(cacheKey, JSON.stringify(response), "EX", this.CACHE_TTL_SECONDS);
 
     return response;
   }
