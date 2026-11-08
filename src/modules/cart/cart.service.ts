@@ -6,12 +6,11 @@ import {
   UpdateCartItemInput,
   RemoveCartItemInput,
 } from "./cart.schema.js";
-import { CartResponse, EnrichedCartItem } from "./cart.types.js";
+import { CartResponse, CartTarget, EnrichedCartItem } from "./cart.types.js";
 
 export class CartService {
-  static async getCart(target: { userId?: string; sessionId?: string }): Promise<CartResponse> {
-    const cartKey = CartStorage.buildCartKey(target);
-    const rawItems = await CartStorage.getCartRaw(cartKey);
+  static async getCart(target: CartTarget): Promise<CartResponse> {
+    const rawItems = await CartStorage.getCartRaw(target);
 
     const variantKeys = Object.keys(rawItems);
     if (variantKeys.length === 0) {
@@ -44,8 +43,8 @@ export class CartService {
       const product = productMap.get(item.productId);
 
       if (!product) {
-        // Clean up stale or deleted product reference from Redis
-        await CartStorage.removeItem(cartKey, item.productId, item.size, item.color);
+        // Clean up stale or deleted product reference from the cart.
+        await CartStorage.removeItem(target, item.productId, item.size, item.color);
         warnings.push(`A product in your cart is no longer available and was removed.`);
         continue;
       }
@@ -79,8 +78,7 @@ export class CartService {
         stockWarning = `Quantity reduced to ${availableStock} based on available stock.`;
         warnings.push(`"${product.title}": ${stockWarning}`);
 
-        // Update adjusted quantity back in Redis
-        await CartStorage.setItem(cartKey, { ...item, quantity: effectiveQuantity });
+        await CartStorage.setItem(target, { ...item, quantity: effectiveQuantity });
       }
 
       const unitPrice = Number(matchedInventory?.variant?.price ?? matchedVariant?.price ?? product.price);
@@ -109,11 +107,10 @@ export class CartService {
   }
 
   static async addItem(
-    target: { userId?: string; sessionId?: string },
+    target: CartTarget,
     input: AddCartItemInput
   ): Promise<CartResponse> {
     const { productId, size, color, quantity } = input;
-    const cartKey = CartStorage.buildCartKey(target);
     //  console.log("CartService.addItem step=1 productLookup start");
     // 1. Verify Product exists
     const product = await db.product.findUnique({
@@ -141,7 +138,7 @@ export class CartService {
     });
     // console.log("CartService.addItem step=2 done");
     // console.log("CartService.addItem step=3 getCartRaw start");
-    const rawItems = await CartStorage.getCartRaw(cartKey);
+    const rawItems = await CartStorage.getCartRaw(target);
     // console.log("CartService.addItem step=3 done");
     // console.log("CartService.addItem step=4 variantKey start");
     const variantKey = CartStorage.getVariantKey(productId, size, color);
@@ -159,14 +156,7 @@ export class CartService {
         throw error;
       }
     }
-console.log("CartService.addItem step=5 CartStorage.setItem start", JSON.stringify( {cartKey,
-      productId,
-      size,
-      color,
-      quantity: requestedTotal,
-    }));
-    // 3. Persist to Redis
-    await CartStorage.setItem(cartKey, {
+    await CartStorage.setItem(target, {
       productId,
       size,
       color,
@@ -177,14 +167,12 @@ console.log("CartService.addItem step=5 CartStorage.setItem start", JSON.stringi
   }
 
   static async updateItem(
-    target: { userId?: string; sessionId?: string },
+    target: CartTarget,
     input: UpdateCartItemInput
   ): Promise<CartResponse> {
     const { productId, size, color, quantity } = input;
-    const cartKey = CartStorage.buildCartKey(target);
-
     if (quantity === 0) {
-      await CartStorage.removeItem(cartKey, productId, size, color);
+      await CartStorage.removeItem(target, productId, size, color);
       return this.getCart(target);
     }
 
@@ -208,21 +196,19 @@ console.log("CartService.addItem step=5 CartStorage.setItem start", JSON.stringi
       }
     }
 
-    await CartStorage.setItem(cartKey, { productId, size, color, quantity });
+    await CartStorage.setItem(target, { productId, size, color, quantity });
     return this.getCart(target);
   }
 
   static async removeItem(
-    target: { userId?: string; sessionId?: string },
+    target: CartTarget,
     input: RemoveCartItemInput
   ): Promise<CartResponse> {
-    const cartKey = CartStorage.buildCartKey(target);
-    await CartStorage.removeItem(cartKey, input.productId, input.size, input.color);
+    await CartStorage.removeItem(target, input.productId, input.size, input.color);
     return this.getCart(target);
   }
 
-  static async clearCart(target: { userId?: string; sessionId?: string }): Promise<void> {
-    const cartKey = CartStorage.buildCartKey(target);
-    await CartStorage.clearCart(cartKey);
+  static async clearCart(target: CartTarget): Promise<void> {
+    await CartStorage.clearCart(target);
   }
 }

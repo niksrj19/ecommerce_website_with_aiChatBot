@@ -9,7 +9,7 @@ export interface ShippingAddress {
   phoneNumber: string;
 }
 
-export interface OrderEmailJobPayload {
+export interface OrderEmailDetails {
   orderId: string;
   userEmail: string;
   totalAmount: number;

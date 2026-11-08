@@ -25,11 +25,12 @@ tables. Existing product, cart, and checkout endpoints remain available.
   stock availability without store identifiers; it is public and uncached.
 - `GET /api/product/:id` remains available for ID-based product lookup.
 
-PDP content is cached in Redis for five minutes; variant stock is queried from
+PDP content is cached in process for five minutes; variant stock is queried from
 PostgreSQL for each PDP request. The PDP response advertises a five-second
 shared HTTP cache lifetime, and the standalone inventory availability response
-uses `Cache-Control: no-store`. Brand and category lookups are cached for
-fifteen minutes, and product listings for thirty seconds.
+uses `Cache-Control: no-store`. Brand and category lookups are cached in process
+for fifteen minutes, and product listings for thirty seconds. These application
+caches are local to each API process.
 
 ## Product administration
 
@@ -44,9 +45,9 @@ fifteen minutes, and product listings for thirty seconds.
   a variant. Existing inventory requests without `variantId` remain supported.
 - `PATCH /api/inventory/:id` retains the existing stock adjustment behavior.
 
-Product writes invalidate Redis catalog entries. Stock is deliberately not read
-from cached PDP data so changes to the hot-write inventory table are visible on
-the next request.
+Product writes invalidate the in-process catalog cache. Stock is deliberately
+not read from cached PDP data so changes to the hot-write inventory table are
+visible on the next request.
 
 Apply the additive schema migration with:
 

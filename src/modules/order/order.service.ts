@@ -2,12 +2,12 @@ import { Prisma } from "@prisma/client";
 import { db } from "../../core/database/index.js";
 import { CartStorage } from "../cart/cart.storage.js";
 import { CreateOrderInput } from "./order.schema.js";
-import { dispatchOrderCreatedJob } from "./order.queue.js";
+import { sendOrderConfirmationEmail } from "./order-email.js";
 
 export class OrderService {
   static async checkout(userId: string, userEmail: string, input: CreateOrderInput) {
-    const cartKey = CartStorage.buildCartKey({ userId });
-    const cartItems = await CartStorage.getCartRaw(cartKey);
+    const cartTarget = { userId };
+    const cartItems = await CartStorage.getCartRaw(cartTarget);
 
     const lineItems = Object.values(cartItems);
     if (lineItems.length === 0) {
@@ -145,11 +145,11 @@ export class OrderService {
       });
     });
 
-    // 5. Clear Active Redis Cart
-    await CartStorage.clearCart(cartKey);
+    // 5. Clear the active cart after checkout.
+    await CartStorage.clearCart(cartTarget);
 
-    // 6. Dispatch Async BullMQ Job (fire-and-forget)
-    dispatchOrderCreatedJob({
+    // 6. Send the confirmation email without delaying the checkout response.
+    sendOrderConfirmationEmail({
       orderId: order.id,
       userEmail,
       totalAmount: Number(order.totalAmount),
@@ -160,7 +160,7 @@ export class OrderService {
         quantity: i.quantity,
         unitPrice: Number(i.unitPrice),
       })),
-    }).catch((err) => console.error("Failed to enqueue email confirmation job:", err));
+    }).catch((err) => console.error("Failed to send order confirmation email:", err));
 
     return order;
   }

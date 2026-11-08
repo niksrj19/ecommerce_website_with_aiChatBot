@@ -1,60 +1,67 @@
-// src/modules/cart/cart.storage.ts
-import { redis } from "../../core/redis/client.js";
-import { CartItemStored } from "./cart.types.js";
+import { db } from "../../core/database/index.js";
+import type { CartItemStored, CartTarget } from "./cart.types.js";
 
 export class CartStorage {
-  private static AUTH_CART_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days for authenticated users
-  private static GUEST_CART_TTL_SECONDS = 48 * 60 * 60;       // 48 hours for guests
+  private static async findCart(target: CartTarget) {
+    return target.userId
+      ? db.cart.findUnique({ where: { userId: target.userId } })
+      : db.cart.findUnique({ where: { sessionId: target.sessionId } });
+  }
 
-  static buildCartKey(target: { userId?: string; sessionId?: string }): string {
-    if (target.userId) {
-      return `cart:user:${target.userId}`;
-    }
-    if (target.sessionId) {
-      return `cart:guest:${target.sessionId}`;
-    }
-    throw new Error("Either userId or sessionId must be provided for cart operations");
+  private static async getOrCreateCart(target: CartTarget) {
+    return target.userId
+      ? db.cart.upsert({
+          where: { userId: target.userId },
+          create: { userId: target.userId },
+          update: {},
+        })
+      : db.cart.upsert({
+          where: { sessionId: target.sessionId },
+          create: { sessionId: target.sessionId },
+          update: {},
+        });
   }
 
   static getVariantKey(productId: string, size: string, color: string): string {
     return `${productId}:${size.trim().toLowerCase()}:${color.trim().toLowerCase()}`;
   }
 
-  static async getCartRaw(key: string): Promise<Record<string, CartItemStored>> {
-    const rawData = await redis.hgetall(key);
-    // console.log("CartService.addItem step=3-1 getCartRaw start rawData=",JSON.stringify({key,rawData}))
+  static async getCartRaw(target: CartTarget): Promise<Record<string, CartItemStored>> {
+    const cart = await this.findCart(target);
     const items: Record<string, CartItemStored> = {};
+    if (!cart) return items;
 
-    for (const [variantKey, jsonString] of Object.entries(rawData)) {
-      try {
-        items[variantKey] = JSON.parse(jsonString);
-      } catch {
-        // Skip malformed entries
-      }
+    const cartItems = await db.cartItem.findMany({ where: { cartId: cart.id } });
+    for (const item of cartItems) {
+      items[item.variantKey] = {
+        productId: item.productId,
+        size: item.size,
+        color: item.color,
+        quantity: item.quantity,
+      };
     }
-// console.log("CartService.addItem step=3-2 getCartRaw start rawData=",JSON.stringify({items}))
-    
     return items;
   }
 
-  static async setItem(key: string, item: CartItemStored): Promise<void> {
+  static async setItem(target: CartTarget, item: CartItemStored): Promise<void> {
+    const cart = await this.getOrCreateCart(target);
     const variantKey = this.getVariantKey(item.productId, item.size, item.color);
-    const isGuest = key.startsWith("cart:guest:");
-    const ttl = isGuest ? this.GUEST_CART_TTL_SECONDS : this.AUTH_CART_TTL_SECONDS;
-    // console.log("setItem for HsrtKey =",isGuest)
-    await redis
-      .multi()
-      .hset(key, variantKey, JSON.stringify(item))
-      .expire(key, ttl)
-      .exec();
+    await db.cartItem.upsert({
+      where: { cartId_variantKey: { cartId: cart.id, variantKey } },
+      create: { cartId: cart.id, variantKey, ...item },
+      update: { ...item },
+    });
   }
 
-  static async removeItem(key: string, productId: string, size: string, color: string): Promise<void> {
+  static async removeItem(target: CartTarget, productId: string, size: string, color: string): Promise<void> {
+    const cart = await this.findCart(target);
+    if (!cart) return;
     const variantKey = this.getVariantKey(productId, size, color);
-    await redis.hdel(key, variantKey);
+    await db.cartItem.deleteMany({ where: { cartId: cart.id, variantKey } });
   }
 
-  static async clearCart(key: string): Promise<void> {
-    await redis.del(key);
+  static async clearCart(target: CartTarget): Promise<void> {
+    const cart = await this.findCart(target);
+    if (cart) await db.cart.delete({ where: { id: cart.id } });
   }
 }

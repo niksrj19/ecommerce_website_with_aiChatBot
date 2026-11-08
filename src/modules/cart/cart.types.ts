@@ -7,6 +7,10 @@ export interface CartItemStored {
   quantity: number;
 }
 
+export type CartTarget =
+  | { userId: string; sessionId?: never }
+  | { sessionId: string; userId?: never };
+
 export interface EnrichedCartItem extends CartItemStored {
   variantKey: string;
   title: string;

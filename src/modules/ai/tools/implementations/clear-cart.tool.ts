@@ -19,10 +19,10 @@ export const clearCartTool = {
   ) => {
     ToolGuardrails.validateInput(clearCartSchema, args);
 
-    await CartService.clearCart({
-      userId: context.userId,
-      sessionId: context.sessionId,
-    });
+    const target = context.userId
+      ? { userId: context.userId }
+      : { sessionId: context.sessionId };
+    await CartService.clearCart(target);
 
     return ToolGuardrails.sanitizeOutput({
       success: true,

@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { ZodError } from "zod";
 import { CartService } from "./cart.service.js";
 import { CartMerger } from "./cart.merger.js";
+import { CartTarget } from "./cart.types.js";
 import {
   addCartItemSchema,
   updateCartItemSchema,
@@ -11,7 +12,7 @@ import {
 } from "./cart.schema.js";
 
 export class CartController {
-  private static resolveTarget(req: Request): { userId?: string; sessionId?: string } {
+  private static resolveTarget(req: Request): CartTarget {
     if (req.user?.userId) {
       return { userId: req.user.userId };
     }
