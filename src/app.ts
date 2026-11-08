@@ -15,6 +15,7 @@ import { paymentRoutes } from "./modules/payment/payment.routes.js";
 import { aiRoutes } from "./modules/ai/ai.routes.js";
 import { env } from "./config/env.js";
 import { contactRoutes } from "./modules/contact/contact.routes.js";
+import { db } from "./core/database/index.js";
 
 export const createApp = (): Application => {
 
@@ -91,6 +92,26 @@ export const createApp = (): Application => {
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
     });
+  });
+
+  app.get("/dbhealth", async (_req: Request, res: Response) => {
+    try {
+      await db.$queryRaw`SELECT 1`;
+      res.status(200).json({
+        status: "ok",
+        database: "connected",
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Database health check failed:", error);
+      res.status(503).json({
+        status: "error",
+        database: "disconnected",
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
+      });
+    }
   });
 
   const logUnhandledErrors: ErrorRequestHandler = (error, req, _res, next) => {
