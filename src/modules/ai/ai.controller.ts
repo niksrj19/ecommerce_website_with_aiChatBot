@@ -4,7 +4,11 @@ import { HitlService } from "./hitl/hitl.service.js";
 import { z } from "zod";
 
 const chatStreamSchema = z.object({
-  prompt: z.string().trim().min(1, "Prompt cannot be empty"),
+  prompt: z
+    .string()
+    .trim()
+    .min(1, "Prompt cannot be empty")
+    .max(4000, "Prompt cannot exceed 4000 characters"),
   sessionId: z.string().trim().min(1, "Session ID is required"),
 });
 
